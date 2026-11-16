@@ -51,8 +51,13 @@ def build_all_facts(metrics_csv: str | Path, rm_csv: str | Path) -> list[dict]:
 
 
 def _format_raw_value(value: int | float) -> str:
-    """Use the same displayed precision for clue text and compatibility groups."""
-    return f"{value:g}" if isinstance(value, int) or value.is_integer() else f"{value:.2f}"
+    """Use the same displayed precision for clue text and compatibility groups.
+
+    Цілі — усі цифри з розділювачем тисяч (нерозривний пробіл): 1509515 → «1 509 515».
+    Дробові — 2 знаки після крапки. Наукового запису («1.50952e+06») не буває.
+    """
+    text = f"{int(value):,}" if isinstance(value, int) or value.is_integer() else f"{value:,.2f}"
+    return text.replace(",", "\u00a0")
 
 
 def facts_from_rows(catalog: dict[str, dict], by_metric: dict[str, list[dict]]) -> list[dict]:

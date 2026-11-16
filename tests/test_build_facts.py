@@ -53,8 +53,12 @@ def raw_facts(values: list[int | float | None]) -> list[dict]:
         [["r0", "r1"], ["r0", "r1"]], id="zero-is-observed-not-missing",
     ),
     pytest.param(
-        [1_000_000, 1_000_001, 2_000_000], ["1e+06", "1e+06", "2e+06"],
-        [["r0", "r1"], ["r0", "r1"], ["r2"]], id="general-format-collision",
+        [1_000_000, 1_000_001, 2_000_000], ["1\u00a0000\u00a0000", "1\u00a0000\u00a0001", "2\u00a0000\u00a0000"],
+        [["r0"], ["r1"], ["r2"]], id="large-integers-keep-all-digits",
+    ),
+    pytest.param(
+        [1234.5, 1234.504, 99.0], ["1\u00a0234.50", "1\u00a0234.50", "99"],
+        [["r0", "r1"], ["r0", "r1"], ["r2"]], id="thousands-separator-in-decimals",
     ),
 ])
 def test_raw_sets_match_displayed_values(values, displayed, groups):
