@@ -19,12 +19,12 @@ from etl.load_cars import CarsStep
 from etl.load_drats import DratsStep
 from etl.load_nmt import NmtStep
 from etl.load_parsed import ParsedCsvStep
-from etl.load_population import load_population
+from etl.load_population import PopulationStep, load_population
 from etl.regions import load_regions
 
 SOURCES: dict[str, list[Step]] = {
     "parsed": [ParsedCsvStep()],
-    "raw": [AlertsStep(), DratsStep(), CarsStep(), NmtStep()],
+    "raw": [PopulationStep(), AlertsStep(), DratsStep(), CarsStep(), NmtStep()],
 }
 
 

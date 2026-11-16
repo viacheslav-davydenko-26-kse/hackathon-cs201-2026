@@ -1,6 +1,7 @@
 """/api/rooms (REST + polling раз на 1 с). Власник: Слава."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 
+from app import config
 from app.deps import get_rooms
 from app.game.rooms import RoomManager
 from app.schemas import (
@@ -11,8 +12,10 @@ router = APIRouter(prefix="/api/rooms", tags=["rooms"])
 
 
 @router.post("", response_model=RoomCreated)
-def create_room(rooms: RoomManager = Depends(get_rooms)):
-    return rooms.create_room()
+def create_room(request: Request, rooms: RoomManager = Depends(get_rooms)):
+    """join_url/QR будуються від PUBLIC_URL (якщо задано), інакше від адреси, з якої відкрито host.html."""
+    public_url = config.PUBLIC_URL if config.PUBLIC_URL_SET else str(request.base_url)
+    return rooms.create_room(public_url)
 
 
 @router.post("/{code}/players", response_model=JoinResponse, responses={404: {}, 409: {}, 422: {}})

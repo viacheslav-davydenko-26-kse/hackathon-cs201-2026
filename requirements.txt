@@ -4,6 +4,7 @@ pydantic
 pandas
 duckdb
 openpyxl
+py7zr
 segno
 pytest
 httpx
