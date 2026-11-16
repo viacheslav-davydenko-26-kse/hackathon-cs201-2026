@@ -114,13 +114,23 @@ export function createMap(el, geo, opts = {}) {
     regions.set(id, { props: f.properties, playable, centroid: path.centroid(f), nodes: [node] });
   }
 
-  // Київ на карті крихітний, тому поверх нього ставимо коло, в яке легко влучити.
+  // Київ на карті крихітний, тому поверх нього ставимо НЕВИДИМЕ коло — зону кліку, в яку легко влучити.
+  // Фарбується і виділяється лише справжній контур міста, а коло тільки ловить кліки й наведення.
+  // Пунктирне кільце (kyivRing) показуємо, коли Київ виділено, щоб крихітне місто було помітно.
   const kyiv = regions.get(KYIV_ID);
+  let kyivHit = null;
+  let kyivRing = null;
   if (kyiv) {
     const [cx, cy] = kyiv.centroid;
-    const circle = svgEl('circle', { cx, cy, r: kyivRadius, class: 'region', 'data-id': KYIV_ID });
-    gRegions.append(circle);
-    kyiv.nodes.push(circle);
+    kyivRing = svgEl('circle', { cx, cy, r: kyivRadius + 4, class: 'kyiv-ring', 'pointer-events': 'none' });
+    kyivRing.style.display = 'none';
+    kyivHit = svgEl('circle', { cx, cy, r: kyivRadius, class: 'kyiv-hit', 'data-id': KYIV_ID });
+    gRegions.append(kyivRing, kyivHit);
+
+    // :hover спрацьовує на колі, а підсвітити треба контур міста — робимо це вручну.
+    const kyivPath = kyiv.nodes[0];
+    kyivHit.addEventListener('pointerenter', () => kyivPath.classList.add('region--hover'));
+    kyivHit.addEventListener('pointerleave', () => kyivPath.classList.remove('region--hover'));
   }
 
   if (labels) {
@@ -169,6 +179,7 @@ export function createMap(el, geo, opts = {}) {
     for (const r of regions.values()) {
       for (const n of r.nodes) n.classList.toggle('region--interactive', interactive && r.playable);
     }
+    kyivHit?.classList.toggle('kyiv-hit--interactive', interactive);
     if (!interactive) tooltip.hidden = true;
   }
   applyInteractive();
@@ -186,13 +197,14 @@ export function createMap(el, geo, opts = {}) {
 
   function select(regionId) {
     svg.querySelectorAll('.region--selected').forEach((n) => n.classList.remove('region--selected'));
+    if (kyivRing) kyivRing.style.display = regionId === KYIV_ID ? '' : 'none';
     const r = regionId ? regions.get(regionId) : null;
     if (!r) return;
     for (const n of r.nodes) {
       n.classList.add('region--selected');
       // Переносимо в кінець, щоб товста обвідка не ховалась під сусідами.
-      // Коло Києва лишається останнім, інакше його перекриє область.
-      if (n.tagName === 'path') gRegions.insertBefore(n, kyiv?.nodes[1] ?? null);
+      // Кільце й зона кліку Києва лишаються останніми, інакше їх перекриє область.
+      gRegions.insertBefore(n, kyivRing);
     }
   }
 

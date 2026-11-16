@@ -531,6 +531,29 @@ svg {
   fill: var(--region-hover);
 }
 
+/* наведення на зону кліку Києва підсвічує контур міста (ставить map.js) */
+.region--interactive.region--hover {
+  fill: var(--region-hover);
+}
+
+/* невидима зона кліку поверх Києва */
+.kyiv-hit {
+  fill: transparent;
+  stroke: none;
+}
+
+.kyiv-hit--interactive {
+  cursor: pointer;
+}
+
+/* пунктирне кільце, коли Київ виділено */
+.kyiv-ring {
+  fill: none;
+  stroke: var(--region-selected);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
 .region--selected {
   stroke: var(--region-selected);
   stroke-width: 3;
