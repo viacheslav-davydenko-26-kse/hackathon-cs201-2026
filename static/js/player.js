@@ -12,7 +12,7 @@
 
 import { getRegions, getGeo, roomJoin, roomGuess, pollRoom, ApiError, HEAT_COLORS } from './api.js?v=2';
 import { createMap } from './map.js?v=2';
-import { icon, hydrateIcons } from './icons.js?v=2';
+import { icon, hydrateIcons, difficultyMeter } from './icons.js?v=2';
 import { confetti, playSound, animateNumber, buttonBusy } from './fx.js?v=2';
 
 /** @typedef {import('./types.js').RoomState} RoomState */
@@ -192,7 +192,7 @@ function renderHints(s) {
       h('span', { class: 'hint__num' }, String(hint.index + 1)),
       h('span', { class: 'hint__body' },
         h('span', {}, hint.text),
-        h('span', { class: 'hint__tag' }, icon(cat.icon), cat.label)));
+        h('span', { class: 'hint__meta' }, h('span', { class: 'hint__tag' }, icon(cat.icon), cat.label), difficultyMeter(hint.index ?? 0))));
   };
   // Найсвіжіша підказка велика й над картою, попередні — дрібно під картою.
   const [latest, ...prev] = [...s.hints].reverse();

@@ -10,7 +10,7 @@ import {
 } from './api.js?v=2';
 import { createMap } from './map.js?v=2';
 import { renderCard } from './card.js?v=2';
-import { icon, hydrateIcons } from './icons.js?v=2';
+import { icon, hydrateIcons, difficultyMeter } from './icons.js?v=2';
 import {
   confetti, playSound, createSoundToggle, animateNumber, stagger, buttonBusy,
 } from './fx.js?v=2';
@@ -111,7 +111,7 @@ function renderHints(newIndex = -1) {
         h('span', { class: 'hint__num' }, String(i + 1)),
         h('span', { class: 'hint__body' },
           h('span', {}, hint.text),
-          h('span', { class: 'hint__tag' }, icon(cat.icon), cat.label))));
+          h('span', { class: 'hint__meta' }, h('span', { class: 'hint__tag' }, icon(cat.icon), cat.label), difficultyMeter(hint.index ?? i)))));
     } else {
       items.push(h('li', { class: 'hint hint--locked' },
         h('span', { class: 'hint__num' }, icon('lock')),
