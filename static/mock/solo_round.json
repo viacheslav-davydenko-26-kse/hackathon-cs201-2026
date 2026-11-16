@@ -1,0 +1,13 @@
+{
+  "round_id": "r_9f2c1a",
+  "total_hints": 5,
+  "max_attempts": 3,
+  "hints": [
+    {
+      "index": 0,
+      "text": "Тут найпопулярніший предмет НМТ на вибір, крім англійської, — історія України",
+      "metric_id": "nmt_top_elective_non_eng",
+      "category": "education"
+    }
+  ]
+}

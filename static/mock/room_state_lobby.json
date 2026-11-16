@@ -1,0 +1,53 @@
+{
+  "code": "K7QF",
+  "status": "lobby",
+  "server_now": 1763300000.0,
+  "players": [
+    {
+      "id": "p_a1",
+      "name": "Оля",
+      "score": 1450
+    },
+    {
+      "id": "p_b2",
+      "name": "Журі №1",
+      "score": 1220
+    },
+    {
+      "id": "p_c3",
+      "name": "Тарас",
+      "score": 310
+    }
+  ],
+  "round_no": 0,
+  "total_rounds": 5,
+  "started_at": null,
+  "ends_at": null,
+  "next_hint_at": null,
+  "hints": [],
+  "answered": 0,
+  "total": 3,
+  "me": null,
+  "my_guess": null,
+  "reveal": null,
+  "leaderboard": [
+    {
+      "player_id": "p_a1",
+      "name": "Оля",
+      "score": 0,
+      "delta": 0
+    },
+    {
+      "player_id": "p_b2",
+      "name": "Журі №1",
+      "score": 0,
+      "delta": 0
+    },
+    {
+      "player_id": "p_c3",
+      "name": "Тарас",
+      "score": 0,
+      "delta": 0
+    }
+  ]
+}

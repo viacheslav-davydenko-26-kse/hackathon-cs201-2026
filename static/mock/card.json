@@ -1,0 +1,140 @@
+{
+  "region": {
+    "id": "lviv",
+    "name_uk": "Львівська область"
+  },
+  "metrics": [
+    {
+      "metric_id": "births_per_1000",
+      "title_uk": "Народжуваність",
+      "unit": "на 1000 мешканців",
+      "category": "demography",
+      "value": 8.1,
+      "value_text": null,
+      "ukraine_avg": 6.7,
+      "rank": 4,
+      "n_ranked": 25,
+      "higher_is": "better",
+      "year": 2021,
+      "source_name": "Держстат",
+      "source_url": "https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4"
+    },
+    {
+      "metric_id": "alerts_hours",
+      "title_uk": "Сумарна тривалість тривог",
+      "unit": "годин за рік",
+      "category": "war",
+      "value": 322.5,
+      "value_text": null,
+      "ukraine_avg": 812.4,
+      "rank": 22,
+      "n_ranked": 25,
+      "higher_is": "worse",
+      "year": 2025,
+      "source_name": "Повітряні тривоги (Vadimkin)",
+      "source_url": "https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset"
+    },
+    {
+      "metric_id": "nmt_avg_math",
+      "title_uk": "Середній бал НМТ з математики",
+      "unit": "балів (100–200)",
+      "category": "education",
+      "value": 146.2,
+      "value_text": null,
+      "ukraine_avg": 141.8,
+      "rank": 3,
+      "n_ranked": 25,
+      "higher_is": "better",
+      "year": 2025,
+      "source_name": "УЦОЯО",
+      "source_url": "https://zno.testportal.com.ua/opendata"
+    },
+    {
+      "metric_id": "divorces_per_100_marriages",
+      "title_uk": "Розлучень на 100 шлюбів",
+      "unit": "на 100 шлюбів",
+      "category": "demography",
+      "value": 38.0,
+      "value_text": null,
+      "ukraine_avg": 49.5,
+      "rank": 24,
+      "n_ranked": 25,
+      "higher_is": "worse",
+      "year": 2021,
+      "source_name": "Держстат",
+      "source_url": "https://data.gov.ua/"
+    },
+    {
+      "metric_id": "nmt_top_elective_non_eng",
+      "title_uk": "Найпопулярніший предмет, крім англійської",
+      "unit": null,
+      "category": "education",
+      "value": null,
+      "value_text": "історія України",
+      "ukraine_avg": null,
+      "rank": null,
+      "n_ranked": null,
+      "higher_is": "neutral",
+      "year": 2025,
+      "source_name": "УЦОЯО",
+      "source_url": "https://zno.testportal.com.ua/opendata"
+    }
+  ],
+  "highlights": [
+    "У топ-5 за народжуваністю",
+    "Утричі менше годин тривоги, ніж у середньому по Україні",
+    "3-є місце за балом НМТ з математики"
+  ],
+  "series": {
+    "alerts_count": [
+      {
+        "period": "2025-01",
+        "value": 22.0
+      },
+      {
+        "period": "2025-02",
+        "value": 18.0
+      },
+      {
+        "period": "2025-03",
+        "value": 25.0
+      },
+      {
+        "period": "2025-04",
+        "value": 20.0
+      },
+      {
+        "period": "2025-05",
+        "value": 31.0
+      },
+      {
+        "period": "2025-06",
+        "value": 27.0
+      },
+      {
+        "period": "2025-07",
+        "value": 24.0
+      },
+      {
+        "period": "2025-08",
+        "value": 19.0
+      },
+      {
+        "period": "2025-09",
+        "value": 21.0
+      },
+      {
+        "period": "2025-10",
+        "value": 26.0
+      },
+      {
+        "period": "2025-11",
+        "value": 23.0
+      },
+      {
+        "period": "2025-12",
+        "value": 17.0
+      }
+    ]
+  }
+}

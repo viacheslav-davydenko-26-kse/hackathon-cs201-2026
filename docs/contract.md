@@ -1,103 +1,236 @@
-# API-контракт «ДеЦе? Live»
+# Контракт «ДеЦе? Live»
 
-> Копія розділу 3 з PLAN.md. Змінює лише Слава (разом з `app/schemas.py`), про зміни пише в чат.
+> **Хто змінює:** лише Слава, разом з `app/schemas.py`. Після зміни він перегенеровує
+> `docs/openapi.json` і `static/mock/*.json` (див. §9) і пише в чат.
+>
+> **Джерело правди:** `app/schemas.py` (HTTP) та `app/domain.py` (Python усередині).
+> Цей документ пояснює *поведінку*, а форму полів дивись у `docs/openapi.json` або `static/js/types.js`.
+> `tests/test_contract.py` падає, якщо мок, OpenAPI або перелік ендпоінтів розійшлися зі схемами.
 
+---
 
-### Схема SQLite (`db/schema.sql`)
-```sql
-CREATE TABLE regions (
-  id TEXT PRIMARY KEY,          -- 'lviv', 'kyiv_city'
-  name_uk TEXT NOT NULL,        -- 'Львівська область'
-  short_uk TEXT NOT NULL,       -- 'Львівщина'
-  iso TEXT, koatuu2 TEXT,
-  playable INTEGER NOT NULL,    -- 0 для Криму/Севастополя (і, можливо, Луганської)
-  lat REAL, lon REAL,           -- центроїд
-  population INTEGER, area_km2 REAL
-);
-CREATE TABLE region_aliases (alias TEXT PRIMARY KEY, region_id TEXT REFERENCES regions(id));
-CREATE TABLE metrics (
-  id TEXT PRIMARY KEY,          -- 'alerts_hours', 'cars_top_brand'
-  title_uk TEXT, unit TEXT,     -- 'годин тривоги', 'на 1000 мешканців'
-  kind TEXT,                    -- 'numeric' | 'categorical'
-  category TEXT,                -- 'war' | 'demography' | 'cars' | 'education'
-  source_name TEXT, source_url TEXT, year INTEGER
-);
-CREATE TABLE region_metrics (
-  region_id TEXT, metric_id TEXT,
-  value REAL, value_text TEXT,  -- value_text для categorical ('Renault')
-  rank INTEGER, n_ranked INTEGER,
-  PRIMARY KEY (region_id, metric_id)
-);
-CREATE TABLE series (region_id TEXT, metric_id TEXT, period TEXT, value REAL); -- '2024-03'
-CREATE TABLE facts (
-  id INTEGER PRIMARY KEY,
-  region_id TEXT, metric_id TEXT,
-  kind TEXT,                    -- 'rank' | 'relative' | 'raw' | 'categorical'
-  text_uk TEXT,                 -- 'У топ-3 областей за годинами тривоги'
-  consistent TEXT,              -- JSON-список регіонів, для яких це твердження теж істинне
-  info REAL,                    -- log2(25 / len(consistent)), тобто наскільки факт видає відповідь
-  riddle_uk TEXT                -- Stretch: LLM-перефразування
-);
-CREATE TABLE scores (id INTEGER PRIMARY KEY, nickname TEXT, mode TEXT, points INTEGER,
-                     daily_date TEXT, created_at TEXT); -- Stretch
-```
+## 1. Загальні правила
 
-### Генерація фактів і підбір підказок (ключова логіка)
-- Для кожної пари (регіон, numeric-метрика) створюємо факти трьох видів: **rank** (топ-1/топ-3/останні-3), **relative** («на 23% нижче за середнє по Україні», бакети ±10%), **raw** («412 годин тривоги за 2024»). Для categorical-метрик: «найпопулярніша марка нових авто — Renault».
-- `consistent` — множина регіонів, для яких це твердження теж істинне (для relative: регіони з того ж бакета; для categorical: ті, де значення таке саме).
-- `pick_hints(region_id, n=5)`: жадібно беремо факти з **різних категорій**, сортуємо за зростанням `info` (спочатку найважчий) і перевіряємо, що перетин `consistent` усіх 5 фактів дорівнює `{region_id}`. Так раунд гарантовано має одну відповідь.
+| | |
+|---|---|
+| База | той самий origin, що й сторінка (`/api/...`, `/static/...`). CORS не потрібен |
+| Формат | JSON, UTF-8, `snake_case` |
+| ID регіонів | slug: `lviv`, `kyiv_city`, `kyiv_obl`, `ivano_frankivsk`… (повний список: `GET /api/regions`) |
+| Час | unix-секунди, `float`, UTC. **Таймери рахуються від `server_now`**, а не від годинника телефона |
+| Відстані | км, між центроїдами регіонів (haversine) |
+| Невідомі поля | сервер відхиляє (`extra="forbid"`) → 422 `validation_error` |
+| Регістр коду кімнати | будь-який; сервер приводить до верхнього |
 
-### Бали
-- `HINT_MULT = [1.0, 0.8, 0.6, 0.45, 0.3]` за індексом останньої відкритої підказки.
-- Правильна відповідь: `1000 * mult`. Неправильна: `500 * mult * max(0, 1 - d_km/500)`. Соло: до 3 спроб, кожна наступна ×0.5.
-- Мультиплеєр: +до 100 балів швидкості пропорційно часу, що лишився.
-- «Гаряче/холодно» (haversine між центроїдами): `<150 км` червоний `hot`, `<300` помаранчевий `warm`, `<500` жовтий `cool`, далі синій `cold`.
+Ігрових регіонів 25 (24 області + м. Київ). Крим і Севастополь повертаються з `playable: false`:
+їх видно на карті сірими, але клік ігнорується, а guess дає 422 `region_not_playable`.
 
-### REST API (`app/schemas.py`, pydantic; копія в `docs/contract.md`)
-```
-GET  /api/regions                    -> [{id, name_uk, short_uk, playable, lat, lon}]
-GET  /static/ua.geojson              -> FeatureCollection, properties.region_id = наш slug
-POST /api/solo/rounds                -> {round_id, total_hints: 5, hints: [Hint]}       # перша підказка
-POST /api/solo/rounds/{id}/hint      -> {hints: [Hint]}                                   # усі відкриті
-POST /api/solo/rounds/{id}/guess     body {region_id}
-                                     -> {correct, attempt, attempts_left, distance_km,
-                                         heat: "hot|warm|cool|cold", points,
-                                         answer_region_id: str|null}   # null, поки є спроби і не вгадано
-GET  /api/regions/{id}/card          -> Card
-POST /api/rooms                      -> {code: "K7QF", host_key, join_url, qr_svg}
-```
+## 2. Помилки
+
+Будь-яка не-2xx відповідь має однакове тіло:
+
 ```json
-Hint = {"index": 0, "text": "Тут найпопулярніший колір нових авто — сірий", "metric_id": "cars_top_color", "category": "cars"}
-Card = {
-  "region": {"id": "lviv", "name_uk": "Львівська область"},
-  "metrics": [{"metric_id":"births_per_1000","title_uk":"Народжуваність","unit":"на 1000",
-               "value":6.1,"ukraine_avg":5.0,"rank":2,"n_ranked":23,
-               "source_name":"Мін'юст, ДРАЦС","source_url":"https://data.gov.ua/..."}],
-  "highlights": ["У топ-3 за народжуваністю", "..."],
-  "series": {"alerts_count": [{"period":"2024-01","value":31}, ...]}
-}
+{"error": {"code": "room_not_found", "message": "unknown room 'ZZZZ'"}}
 ```
 
-### Кімнати: REST + polling
-Host і гравці опитують `GET .../state` раз на 1 с, дії йдуть звичайними `POST`.
-```
-POST /api/rooms/{code}/players       body {name}                -> {player_id}
-POST /api/rooms/{code}/start         body {host_key}            -> RoomState
-POST /api/rooms/{code}/next          body {host_key}            -> RoomState   # наступний раунд
-POST /api/rooms/{code}/guess         body {player_id, region_id} -> {region_id}
-GET  /api/rooms/{code}/state?player_id=...                      -> RoomState
-```
-```
-RoomState = {code, status: "lobby|round|reveal|finished",
-             players: [{id, name, score}],
-             round_no, total_rounds, ends_at,      # null у lobby
-             hints: [Hint],                        # усі відкриті на зараз
-             answered: 4, total: 6,
-             my_guess: str|null,                   # якщо передано player_id
-             reveal: {answer_region_id, guesses:[{player_id,name,region_id,distance_km,heat,points}],
-                      distribution:{"lviv":3,"volyn":1}, card: Card} | null,
-             leaderboard: [{name, score}]}
-```
-`RoomManager` у `app/game/rooms.py` — чистий Python без залежностей від транспорту. Фонового таймера нема: відкриті підказки й кінець раунду рахуються з `started_at` при кожному запиті (`ROUND_SECONDS/5` с на підказку; раунд закінчується, коли всі відповіли або минув час).
+Фронт розгалужується **лише за `code`**. `message` призначене для консолі, гравцеві його не показуємо.
 
-**Моки:** `static/mock/*.json` (по одному файлу на кожну відповідь вище). У `static/js/api.js` є прапорець `const USE_MOCK = true`, тож фронт працює з першої хвилини.
+| HTTP | code | Коли | Що робить фронт |
+|---|---|---|---|
+| 403 | `bad_host_key` | `start`/`next` з чужим ключем | host: «Сесію ведучого втрачено» |
+| 404 | `region_not_found` | невідомий `region_id` | баг фронту → `console.error` |
+| 404 | `round_not_found` | соло-раунд зник (рестарт сервера) | почати новий раунд |
+| 404 | `room_not_found` | невідомий код кімнати | play: «Кімнату не знайдено», повернути до вводу коду |
+| 404 | `player_not_found` | `guess` з невідомим `player_id` | play: стерти `player_id` з localStorage, перепід'єднатися |
+| 409 | `invalid_state` | дія не в тому статусі (guess у lobby, start двічі) | ігнорувати, наступний poll виправить екран |
+| 409 | `round_finished` | соло: hint/guess після кінця раунду | показати результат |
+| 409 | `no_more_hints` | соло: шоста підказка | сховати кнопку |
+| 409 | `already_guessed` | друга відповідь у раунді | ігнорувати |
+| 409 | `name_taken` | ім'я вже є в кімнаті (без регістру) | «Це ім'я зайняте» |
+| 422 | `region_not_playable` | guess у Крим/Севастополь | не має статися: карта не дає клікнути |
+| 422 | `invalid_name` | порожнє ім'я або > 20 символів після `strip` | підсвітити поле |
+| 422 | `validation_error` | тіло не за схемою | баг → `console.error` |
+| 501 | `not_implemented` | реалізацію ще не змерджено | на моках не трапляється |
+| 503 | `data_unavailable` | нема `db/game.sqlite` і `data/parsed` | `python -m etl.run_all` |
+
+## 3. Ендпоінти
+
+| Метод | Шлях | Тіло | Відповідь | Помилки |
+|---|---|---|---|---|
+| GET | `/health` | | `{"status":"ok"}` | |
+| GET | `/api/config` | | `AppConfig` | |
+| GET | `/api/regions` | | `Region[]` (27, за укр. алфавітом) | 503 |
+| GET | `/api/regions/{id}/card` | | `Card` | 404 `region_not_found` |
+| GET | `/static/ua.geojson` | | FeatureCollection (§6) | |
+| POST | `/api/solo/rounds` | | `SoloRound` | 503 |
+| POST | `/api/solo/rounds/{round_id}/hint` | | `{hints: Hint[]}` | 404, 409 `round_finished` / `no_more_hints` |
+| POST | `/api/solo/rounds/{round_id}/guess` | `{region_id}` | `SoloGuessResponse` | 404, 409 `round_finished`, 422 |
+| POST | `/api/rooms` | | `RoomCreated` | |
+| POST | `/api/rooms/{code}/players` | `{name}` | `{player_id}` | 404, 409 `name_taken` / `invalid_state`, 422 `invalid_name` |
+| POST | `/api/rooms/{code}/start` | `{host_key}` | `RoomState` | 403, 404, 409 |
+| POST | `/api/rooms/{code}/next` | `{host_key}` | `RoomState` | 403, 404, 409 |
+| POST | `/api/rooms/{code}/guess` | `{player_id, region_id}` | `{region_id}` | 404, 409, 422 |
+| GET | `/api/rooms/{code}/state?player_id=` | | `RoomState` | 404 |
+
+Приклад кожної відповіді лежить у `static/mock/` (§9).
+
+## 4. Соло
+
+```
+soloStart() ──► SoloRound{hints:[h0]} ──► [soloHint() ≤ 4 рази] ──► soloGuess() ≤ 3 рази ──► finished
+```
+
+* Раунд стартує з 1 відкритою підказкою. `hint` відкриває наступну і повертає **усі** відкриті.
+* `guess` можна робити будь-коли. Раунд стає `finished`, коли `correct` або коли вичерпано `max_attempts` (3).
+  Лише тоді `answer_region_id != null`.
+* Неправильна відповідь не закриває раунд: можна відкрити ще підказку і спробувати знову.
+* Бали за спробу: `scoring.points(correct, distance_km, hint_index = кількість_відкритих - 1, attempt)`:
+  * правильна: `1000 × HINT_MULT[hint_index] × 0.5^(attempt-1)`;
+  * неправильна: `500 × HINT_MULT[hint_index] × max(0, 1 - d/500) × 0.5^(attempt-1)`;
+  * `HINT_MULT = [1.0, 0.8, 0.6, 0.45, 0.3]` (є в `/api/config`).
+* Підсвітка спроби на карті: `HEAT_COLORS[heat]` з `api.js`. Межі: `<150` км hot, `<300` warm, `<500` cool, далі cold.
+* Після `finished` фронт показує картку: `getCard(answer_region_id)`.
+* Стан соло живе в пам'яті сервера. Після рестарту прийде 404 `round_not_found`, тоді просто починаємо новий раунд.
+
+## 5. Кімнати
+
+### 5.1 State machine
+
+```
+             start              автоматично або next              next (ще є раунди)
+  lobby ───────────────► round ─────────────────────► reveal ──────────────────────► round (n+1)
+                                                         │
+                                                         └── next (останній раунд) ──► finished
+```
+
+| Статус | Перехід | Тригер |
+|---|---|---|
+| `lobby` → `round` | `POST start` | хост |
+| `round` → `reveal` | **автоматично**, коли `server_now ≥ ends_at` або всі гравці відповіли; або `POST next` (достроково) | сервер / хост |
+| `reveal` → `round` | `POST next`, якщо `round_no < total_rounds` | хост |
+| `reveal` → `finished` | `POST next` після останнього раунду | хост |
+
+Фонового таймера нема: сервер перераховує статус при кожному запиті. Тому host **мусить** опитувати
+`state`, щоб кімната перейшла в `reveal`.
+
+### 5.2 Таймінг підказок
+
+Раунд триває `round_seconds` (35 за замовчуванням, у демо задається через `DEMO_ROUND_SECONDS`).
+Підказка `i` (0-based) відкривається в момент `started_at + i × round_seconds / 5`:
+підказка 0 відкрита одразу, а наступна приходить у `next_hint_at`. Відповідь можна дати будь-коли до `ends_at`.
+
+Лічильники на екрані:
+* до кінця раунду: `ends_at - server_now`;
+* до наступної підказки: `next_hint_at - server_now`.
+
+Між poll-ами відлік можна вести локально (`performance.now()`), а кожна нова відповідь `state` його синхронізує.
+
+### 5.3 Polling
+
+* `pollRoom(code, playerId, onState)` з `api.js`: 1 запит на секунду, без паралельних запитів.
+* host опитує **без** `player_id`, play опитує **з** `player_id`.
+* `player_id` і `room` гравця зберігаються в `localStorage`. Після перезавантаження сторінки
+  гравець продовжує гру без повторного join; якщо прийшла 404 `player_not_found`, він приєднується знову.
+* `host_key` зберігається лише в `sessionStorage` хоста.
+
+### 5.4 Поля `RoomState` за статусами
+
+| Поле | lobby | round | reveal | finished |
+|---|---|---|---|---|
+| `round_no` | 0 | 1..N | 1..N | N |
+| `started_at`, `ends_at` | null | ✓ | ✓ | null |
+| `next_hint_at` | null | ✓ / null, коли всі 5 відкриті | null | null |
+| `hints` | `[]` | відкриті | усі 5 | усі 5 останнього раунду |
+| `answered` / `total` | 0 / N | ✓ | ✓ | ✓ |
+| `my_guess` | null | ✓ / null | ✓ / null | null |
+| `reveal` | null | null | ✓ | ✓ (останній раунд) |
+| `leaderboard[].delta` | 0 | з попереднього раунду | за цей раунд | за останній |
+
+`me` є, лише якщо передано відомий `player_id`. `players` ідуть у порядку приєднання,
+`leaderboard` відсортовано за `score` спадно.
+
+### 5.5 Бали в кімнаті
+
+На reveal для кожного, хто відповів: `scoring.points(correct, d, hint_index_в_момент_відповіді)` плюс,
+лише за правильну відповідь, `speed_bonus = round(100 × (ends_at - answered_at) / round_seconds)`.
+Хто не відповів, отримує 0. Дозволено приєднатися посеред гри: гравець стартує з 0 балів і може відповідати в поточному раунді.
+
+### 5.6 Що малює кожен екран
+
+| Статус | `host.html` (проєктор) | `play.html` (телефон) |
+|---|---|---|
+| lobby | великий `qr_svg`, `join_url`, список `players`, кнопка «Старт» | «Чекаємо на старт», своє ім'я |
+| round | карта (не інтерактивна), `hints`, таймер, `answered/total` | `hints`, міні-карта, «Відповісти» → `my_guess`; після відповіді «Чекаємо» |
+| reveal | `map.choropleth(distribution)`, `drawLine(guess → answer)`, лідерборд, `renderCard(reveal.card)`, кнопка «Далі» | правильна відповідь, свої бали з `reveal.guesses`, місце в `leaderboard` |
+| finished | фінальний лідерборд, підсумковий футер | своє місце і бали |
+
+## 6. Геодані (`/static/ua.geojson`)
+
+`FeatureCollection` з 27 features (`Polygon`/`MultiPolygon`, WGS84). Кожна має
+
+```json
+"properties": {"region_id": "lviv", "name_uk": "Львівська область", "short_uk": "Львівщина", "playable": 1}
+```
+
+`region_id` збігається з `Region.id`. Центроїди беремо з `GET /api/regions` (`lat`, `lon`), з GeoJSON їх не рахуємо.
+Файл генерує `etl/build_geo.py`, поки що туди копіюється `data/parsed/ua.geojson`.
+
+## 7. JS-модулі (інтерфейси між фронтендерами)
+
+| Модуль | Експортує | Власник | Хто використовує |
+|---|---|---|---|
+| `js/types.js` | JSDoc-типи всіх відповідей | Слава | усі |
+| `js/api.js` | `getConfig, getRegions, getCard, getGeo, solo*, room*, pollRoom, secondsUntil, HEAT_COLORS, ApiError` | Андрій | усі екрани |
+| `js/map.js` | `createMap(el, geo, opts) → MapView` | Андрій | solo, host, player |
+| `js/card.js` | `renderCard(el, card, opts) → {destroy}` | Матвій | solo, host |
+| `js/solo.js`, `js/host.js`, `js/player.js` | нічого (точки входу сторінок) | Андрій / Андрій / Вадім | |
+
+Повні сигнатури з JSDoc описані в самих файлах. Екрани не викликають `fetch` напряму: лише через `api.js`.
+
+## 8. Python-інтерфейси (бекенд і ETL)
+
+| Інтерфейс | Файл | Реалізація | Власник реалізації |
+|---|---|---|---|
+| `Repository` | `app/repository.py` | `SqliteRepository`, `CsvRepository`, `InMemoryRepository` | Слава (готово) |
+| `HintPicker.pick(region_id, n, rng) → Hint[]` | `app/game/hints.py` | `FactHintPicker` (`RandomHintPicker` тимчасовий) | Матвій |
+| `CardBuilder.build(region_id) → Card` | `app/game/card.py` | `DefaultCardBuilder` | Матвій |
+| `SoloService` | `app/game/solo.py` | `InMemorySoloService` | Слава |
+| `RoomManager` | `app/game/rooms.py` | `InMemoryRoomManager` | Слава |
+| `Step.run(ctx) → EtlTables` | `etl/base.py` | `AlertsStep`, `DratsStep`, `CarsStep`, `NmtStep` (`ParsedCsvStep` тимчасовий) | Ілля |
+| `FactGenerator.generate(...) → Fact[]` | `etl/build_facts.py` | `DefaultFactGenerator` | Матвій |
+| `Check.run(repo) → CheckResult` | `etl/check.py` | `NanMatrix` тощо | Ілля |
+| `build_geo`, `load_population` | `etl/*.py` | функції | Вадім |
+
+Детальні контракти записані в docstring кожного абстрактного класу. Яка реалізація підключена, вирішує `app/deps.py`
+(`HINT_PICKER=facts` вмикає `FactHintPicker`).
+
+Дані в БД (`db/schema.sql`):
+* `region_metrics.rank`: 1 = найбільше значення, рахується серед ігрових регіонів;
+  рівні значення ділять одне місце (1, 2, 2, 4). Для categorical `rank = null`.
+* `facts.consistent`: JSON-масив `region_id`, який завжди містить сам регіон.
+* `facts.info = log2(N_ігрових / len(consistent))`.
+
+## 9. Моки і синхронізація
+
+| Файл | Відповідь |
+|---|---|
+| `config.json` | `GET /api/config` |
+| `regions.json` | `GET /api/regions` |
+| `card.json` | `GET /api/regions/lviv/card` |
+| `solo_round.json`, `solo_hint.json` | старт і друга підказка |
+| `solo_guess_wrong.json`, `solo_guess_correct.json`, `solo_guess_failed.json` | `?guess=wrong\|correct\|failed` |
+| `room_created.json`, `room_join.json`, `room_guess.json` | |
+| `room_state_{lobby,round,reveal,finished}.json` | `?state=…` |
+| `error.json` | приклад помилки |
+
+Як перемикати режими (працює на кожній сторінці):
+* `?mock=1` вмикає моки, `?mock=0` — справжній API;
+* `?state=reveal` задає статус кімнати в моках;
+* `?guess=correct` задає результат соло-відповіді в моках.
+
+Команди для перегенерації:
+
+```bash
+python -m scripts.export_mocks     # static/mock/*.json
+python -m scripts.export_openapi   # docs/openapi.json
+pytest tests/test_contract.py      # перевірка синхронізації
+```

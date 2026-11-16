@@ -1,0 +1,76 @@
+{
+  "code": "K7QF",
+  "status": "round",
+  "server_now": 1763300015.0,
+  "players": [
+    {
+      "id": "p_a1",
+      "name": "Оля",
+      "score": 1450
+    },
+    {
+      "id": "p_b2",
+      "name": "Журі №1",
+      "score": 1220
+    },
+    {
+      "id": "p_c3",
+      "name": "Тарас",
+      "score": 310
+    }
+  ],
+  "round_no": 2,
+  "total_rounds": 5,
+  "started_at": 1763300000.0,
+  "ends_at": 1763300035.0,
+  "next_hint_at": 1763300021.0,
+  "hints": [
+    {
+      "index": 0,
+      "text": "Тут найпопулярніший предмет НМТ на вибір, крім англійської, — історія України",
+      "metric_id": "nmt_top_elective_non_eng",
+      "category": "education"
+    },
+    {
+      "index": 1,
+      "text": "Тривоги тут тривали в середньому 65 хвилин — одне з найнижчих значень",
+      "metric_id": "alerts_avg_minutes",
+      "category": "war"
+    },
+    {
+      "index": 2,
+      "text": "Народжуваність тут на 20% вища за середню по Україні",
+      "metric_id": "births_per_1000",
+      "category": "demography"
+    }
+  ],
+  "answered": 1,
+  "total": 3,
+  "me": {
+    "id": "p_a1",
+    "name": "Оля",
+    "score": 1450
+  },
+  "my_guess": "lviv",
+  "reveal": null,
+  "leaderboard": [
+    {
+      "player_id": "p_a1",
+      "name": "Оля",
+      "score": 1450,
+      "delta": 880
+    },
+    {
+      "player_id": "p_b2",
+      "name": "Журі №1",
+      "score": 1220,
+      "delta": 700
+    },
+    {
+      "player_id": "p_c3",
+      "name": "Тарас",
+      "score": 310,
+      "delta": 0
+    }
+  ]
+}

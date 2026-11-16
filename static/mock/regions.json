@@ -1,0 +1,218 @@
+[
+  {
+    "id": "crimea",
+    "name_uk": "Автономна Республіка Крим",
+    "short_uk": "Крим",
+    "playable": false,
+    "lat": 45.2659,
+    "lon": 34.4272
+  },
+  {
+    "id": "vinnytsia",
+    "name_uk": "Вінницька область",
+    "short_uk": "Вінниччина",
+    "playable": true,
+    "lat": 48.9206,
+    "lon": 28.6855
+  },
+  {
+    "id": "volyn",
+    "name_uk": "Волинська область",
+    "short_uk": "Волинь",
+    "playable": true,
+    "lat": 51.191,
+    "lon": 24.8705
+  },
+  {
+    "id": "dnipro",
+    "name_uk": "Дніпропетровська область",
+    "short_uk": "Дніпропетровщина",
+    "playable": true,
+    "lat": 48.3009,
+    "lon": 34.8435
+  },
+  {
+    "id": "donetsk",
+    "name_uk": "Донецька область",
+    "short_uk": "Донеччина",
+    "playable": true,
+    "lat": 47.9554,
+    "lon": 37.6756
+  },
+  {
+    "id": "zhytomyr",
+    "name_uk": "Житомирська область",
+    "short_uk": "Житомирщина",
+    "playable": true,
+    "lat": 50.6402,
+    "lon": 28.4761
+  },
+  {
+    "id": "zakarpattia",
+    "name_uk": "Закарпатська область",
+    "short_uk": "Закарпаття",
+    "playable": true,
+    "lat": 48.4038,
+    "lon": 23.276
+  },
+  {
+    "id": "zaporizhzhia",
+    "name_uk": "Запорізька область",
+    "short_uk": "Запоріжжя",
+    "playable": true,
+    "lat": 47.1685,
+    "lon": 35.7724
+  },
+  {
+    "id": "ivano_frankivsk",
+    "name_uk": "Івано-Франківська область",
+    "short_uk": "Прикарпаття",
+    "playable": true,
+    "lat": 48.7011,
+    "lon": 24.6195
+  },
+  {
+    "id": "kyiv_obl",
+    "name_uk": "Київська область",
+    "short_uk": "Київщина",
+    "playable": true,
+    "lat": 50.3028,
+    "lon": 30.4581
+  },
+  {
+    "id": "kirovohrad",
+    "name_uk": "Кіровоградська область",
+    "short_uk": "Кіровоградщина",
+    "playable": true,
+    "lat": 48.4723,
+    "lon": 32.0819
+  },
+  {
+    "id": "luhansk",
+    "name_uk": "Луганська область",
+    "short_uk": "Луганщина",
+    "playable": true,
+    "lat": 48.9856,
+    "lon": 39.018
+  },
+  {
+    "id": "lviv",
+    "name_uk": "Львівська область",
+    "short_uk": "Львівщина",
+    "playable": true,
+    "lat": 49.7173,
+    "lon": 23.9169
+  },
+  {
+    "id": "mykolaiv",
+    "name_uk": "Миколаївська область",
+    "short_uk": "Миколаївщина",
+    "playable": true,
+    "lat": 47.3943,
+    "lon": 31.766
+  },
+  {
+    "id": "kyiv_city",
+    "name_uk": "м. Київ",
+    "short_uk": "Київ",
+    "playable": true,
+    "lat": 50.4487,
+    "lon": 30.5475
+  },
+  {
+    "id": "sevastopol",
+    "name_uk": "м. Севастополь",
+    "short_uk": "Севастополь",
+    "playable": false,
+    "lat": 44.5546,
+    "lon": 33.4743
+  },
+  {
+    "id": "odesa",
+    "name_uk": "Одеська область",
+    "short_uk": "Одещина",
+    "playable": true,
+    "lat": 46.583,
+    "lon": 29.937
+  },
+  {
+    "id": "poltava",
+    "name_uk": "Полтавська область",
+    "short_uk": "Полтавщина",
+    "playable": true,
+    "lat": 49.7325,
+    "lon": 33.7784
+  },
+  {
+    "id": "rivne",
+    "name_uk": "Рівненська область",
+    "short_uk": "Рівненщина",
+    "playable": true,
+    "lat": 51.0403,
+    "lon": 26.3917
+  },
+  {
+    "id": "sumy",
+    "name_uk": "Сумська область",
+    "short_uk": "Сумщина",
+    "playable": true,
+    "lat": 51.1062,
+    "lon": 34.1239
+  },
+  {
+    "id": "ternopil",
+    "name_uk": "Тернопільська область",
+    "short_uk": "Тернопільщина",
+    "playable": true,
+    "lat": 49.4019,
+    "lon": 25.6481
+  },
+  {
+    "id": "kharkiv",
+    "name_uk": "Харківська область",
+    "short_uk": "Харківщина",
+    "playable": true,
+    "lat": 49.615,
+    "lon": 36.5048
+  },
+  {
+    "id": "kherson",
+    "name_uk": "Херсонська область",
+    "short_uk": "Херсонщина",
+    "playable": true,
+    "lat": 46.5497,
+    "lon": 33.4654
+  },
+  {
+    "id": "khmelnytskyi",
+    "name_uk": "Хмельницька область",
+    "short_uk": "Хмельниччина",
+    "playable": true,
+    "lat": 49.5075,
+    "lon": 26.9296
+  },
+  {
+    "id": "cherkasy",
+    "name_uk": "Черкаська область",
+    "short_uk": "Черкащина",
+    "playable": true,
+    "lat": 49.2602,
+    "lon": 31.3526
+  },
+  {
+    "id": "chernivtsi",
+    "name_uk": "Чернівецька область",
+    "short_uk": "Буковина",
+    "playable": true,
+    "lat": 48.2684,
+    "lon": 25.9772
+  },
+  {
+    "id": "chernihiv",
+    "name_uk": "Чернігівська область",
+    "short_uk": "Чернігівщина",
+    "playable": true,
+    "lat": 51.355,
+    "lon": 32.0038
+  }
+]
