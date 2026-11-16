@@ -338,6 +338,11 @@ svg {
   cursor: not-allowed;
 }
 
+.map-label {
+  font-size: 13px;
+  fill: var(--text-muted);
+}
+
 .map-tooltip {
   position: absolute;
   pointer-events: none;
