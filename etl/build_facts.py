@@ -50,6 +50,11 @@ def build_all_facts(metrics_csv: str | Path, rm_csv: str | Path) -> list[dict]:
     return facts_from_rows(load_catalog(metrics_csv), load_region_metrics(rm_csv))
 
 
+def _format_raw_value(value: int | float) -> str:
+    """Use the same displayed precision for clue text and compatibility groups."""
+    return f"{value:g}" if isinstance(value, int) or value.is_integer() else f"{value:.2f}"
+
+
 def facts_from_rows(catalog: dict[str, dict], by_metric: dict[str, list[dict]]) -> list[dict]:
     """catalog: metric_id → {title_uk, unit, kind, category}; by_metric: metric_id → рядки region_metrics."""
     facts: list[dict] = []
@@ -91,6 +96,12 @@ def facts_from_rows(catalog: dict[str, dict], by_metric: dict[str, list[dict]]) 
             valid = [r for r in rows if r["value"] is not None]
             if not valid:
                 continue
+
+            # Different source values can produce identical text after rounding.
+            # Group within this metric using exactly the formatter used below.
+            by_displayed_value = defaultdict(set)
+            for r in valid:
+                by_displayed_value[_format_raw_value(r["value"])].add(r["region_id"])
 
             avg_val = sum(r["value"] for r in valid) / len(valid)
             top3 = sorted([r["region_id"] for r in valid if r["rank"] and r["rank"] <= 3])
@@ -153,9 +164,9 @@ def facts_from_rows(catalog: dict[str, dict], by_metric: dict[str, list[dict]]) 
                     "consistent": json.dumps(cons_rel), "info": calc_info(cons_rel), "riddle_uk": None,
                 })
 
-                # C. Raw (точне значення)
-                cons_raw = [reg]
-                val_str = f"{val:g}" if isinstance(val, int) or val.is_integer() else f"{val:.2f}"
+                # C. Raw: усі регіони з однаковим показаним значенням.
+                val_str = _format_raw_value(val)
+                cons_raw = sorted(by_displayed_value[val_str])
                 facts.append({
                     "region_id": reg, "metric_id": metric_id, "category": category,
                     "kind": "raw", "text_uk": f"{title}: {val_str} {unit}".strip(),
