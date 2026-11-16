@@ -24,6 +24,18 @@
 Ігрових регіонів 25 (24 області + м. Київ). Крим і Севастополь повертаються з `playable: false`:
 їх видно на карті сірими, але клік ігнорується, а guess дає 422 `region_not_playable`.
 
+### 1.1 Сторінки
+
+| Сторінка | Що це | Точка входу |
+|---|---|---|
+| `/` | редирект на `/static/index.html` | — |
+| `/static/index.html` | **стартова**: вибір режиму — «Соло» → `solo.html`, «Організувати гру» → `host.html`, поле коду кімнати → `play.html?room=<CODE>` | inline-скрипт |
+| `/static/solo.html` | соло-гра (§4) | `js/solo.js` |
+| `/static/host.html` | екран ведучого / проєктор (§5) | `js/host.js` |
+| `/static/play.html?room=<CODE>` | телефон гравця (§5); сюди веде `join_url`/QR | `js/player.js` |
+
+Стартова сторінка переносить query-параметри (`?mock=1` тощо, §10) у свої посилання.
+
 ## 2. Помилки
 
 Будь-яка не-2xx відповідь має однакове тіло:
@@ -74,6 +86,8 @@
 Приклад кожної відповіді лежить у `static/mock/` (§10).
 
 ## 4. Соло
+
+Сторінка `/static/solo.html` (до цього соло жило в `index.html`, тепер це стартова сторінка, §1.1).
 
 ```
 soloStart() ──► SoloRound{hints:[h0]} ──► [soloHint() ≤ 4 рази] ──► soloGuess() ≤ 3 рази ──► finished
@@ -190,7 +204,7 @@ soloStart() ──► SoloRound{hints:[h0]} ──► [soloHint() ≤ 4 рази
 | `js/api.js` | `getConfig, getRegions, getCard, getGeo, solo*, room*, pollRoom, secondsUntil, HEAT_COLORS, ApiError` | Андрій | усі екрани |
 | `js/map.js` | `createMap(el, geo, opts) → MapView` | Андрій | solo, host, player |
 | `js/card.js` | `renderCard(el, card, opts) → {destroy}` | Матвій | solo, host |
-| `js/solo.js`, `js/host.js`, `js/player.js` | нічого (точки входу сторінок) | Андрій / Андрій / Вадім | |
+| `js/solo.js`, `js/host.js`, `js/player.js` | нічого (точки входу `solo.html`, `host.html`, `play.html`) | Андрій / Андрій / Вадім | |
 
 Повні сигнатури з JSDoc описані в самих файлах. Екрани не викликають `fetch` напряму: лише через `api.js`.
 
@@ -314,7 +328,7 @@ soloStart() ──► SoloRound{hints:[h0]} ──► [soloHint() ≤ 4 рази
 | `room_state_{lobby,round,reveal,finished}.json` | `?state=…` |
 | `error.json` | приклад помилки |
 
-Як перемикати режими (працює на кожній сторінці):
+Як перемикати режими (працює на кожній сторінці; напр. `/static/solo.html?mock=1&guess=correct`):
 * `?mock=1` вмикає моки, `?mock=0` — справжній API;
 * `?state=reveal` задає статус кімнати в моках;
 * `?guess=correct` задає результат соло-відповіді в моках.

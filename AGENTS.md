@@ -9,7 +9,7 @@
 | **Слава** (контракт, бекенд) | `app/{main,config,deps,domain,errors,schemas,repository,qr}.py`, `app/api/*`, `app/game/{solo,rooms,scoring}.py`, `docs/*`, `scripts/*`, `static/js/types.js`, `static/mock/*` (лише через `scripts/export_mocks.py`), `requirements.txt`, `pytest.ini`, `tests/{conftest,test_api,test_contract,test_scoring}.py`, `AGENTS.md` |
 | **Ілля** (ETL) | `db/*`, `etl/{base,regions,load_alerts,load_drats,load_cars,load_nmt,load_parsed,check,run_all}.py`, `tests/test_etl.py` |
 | **Матвій** (факти, картка) | `etl/{metrics_catalog,build_facts,gen_riddles}.py`, `app/game/{hints,card}.py`, `static/js/card.js`, `tests/test_hints.py` |
-| **Андрій** (фронт) | `static/{index,host}.html`, `static/css/*`, `static/js/{api,map,solo,host}.js` |
+| **Андрій** (фронт) | `static/{index,solo,host}.html`, `static/css/*`, `static/js/{api,map,solo,host}.js` |
 | **Вадім** (гео, телефон) | `etl/{build_geo,load_population}.py`, `static/play.html`, `static/js/player.js`, `README.md` |
 
 Треба змінити чужий файл? Попроси власника в чаті. AI-асистент у такому разі **зупиняється і питає**, а не редагує сам.
@@ -37,7 +37,7 @@ pytest                                            # має бути зелено
 pytest -m slow                                    # + повільний тест сирого НМТ
 ```
 
-Фронт без бекенда: відкрий `/static/index.html?mock=1`. Режими моків описані в `docs/contract.md` §10.
+Фронт без бекенда: відкрий `/static/solo.html?mock=1` (або стартову `/static/index.html?mock=1`). Режими моків описані в `docs/contract.md` §10.
 
 ## 4. Перед «готово до мерджу»
 
