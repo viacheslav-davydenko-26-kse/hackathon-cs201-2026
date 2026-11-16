@@ -13,7 +13,7 @@ from collections.abc import Iterable
 
 from app.config import TOTAL_HINTS
 from app.domain import Fact
-from app.errors import RegionNotPlayable
+from app.errors import DataUnavailable, RegionNotPlayable
 from app.repository import Repository
 from app.schemas import Hint
 
@@ -27,7 +27,9 @@ class HintPicker(ABC):
       * категорії якомога різноманітніші (не дві підряд з однієї);
       * текст НЕ містить назви регіону чи прикметників від неї;
       * для однакового `rng` (seed) результат однаковий;
-      * `RegionNotFound` для невідомого id, `RegionNotPlayable` для playable=False.
+      * `RegionNotFound` для невідомого id, `RegionNotPlayable` для playable=False;
+      * `DataUnavailable`, якщо для регіону неможливо зібрати коректний раунд — тоді сервіс
+        (solo/rooms) пробує інший регіон, а 503 віддає, лише коли не підходить жоден.
     Реалізація на фактах додатково гарантує: перетин `consistent` усіх n фактів == {region_id}.
     """
 
@@ -150,7 +152,12 @@ class FactHintPicker(HintPicker):
         self._require_playable(region_id)
         seed = (rng or random.Random()).randrange(2**32)
         facts = [fact_to_dict(f) for f in self.repo.facts(region_id)]
-        return [Hint(**h) for h in pick_hints_from_list(region_id, facts, n=n, seed=seed)]
+        hints = pick_hints_from_list(region_id, facts, n=n, seed=seed)
+        by_key = {(f["metric_id"], f["text_uk"]): set(json.loads(f["consistent"])) for f in facts}
+        cand = set.intersection(*(by_key[(h["metric_id"], h["text"])] for h in hints)) if hints else set()
+        if len(hints) != n or cand != {region_id}:
+            raise DataUnavailable(f"cannot build a unique {n}-hint round for {region_id!r}")
+        return [Hint(**h) for h in hints]
 
 
 class RandomHintPicker(HintPicker):

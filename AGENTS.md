@@ -33,7 +33,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 pytest                                            # має бути зелено (xfail = ще не реалізовано)
 ```
 
-Фронт без бекенда: відкрий `/static/index.html?mock=1`. Режими моків описані в `docs/contract.md` §9.
+Фронт без бекенда: відкрий `/static/index.html?mock=1`. Режими моків описані в `docs/contract.md` §10.
 
 ## 4. Перед «готово до мерджу»
 
