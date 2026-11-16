@@ -16,6 +16,7 @@ import {
 import { createMap } from './map.js';
 import { renderCard } from './card.js';
 import { icon, hydrateIcons } from './icons.js';
+import { confetti, playSound, createSoundToggle } from './fx.js';
 
 /** @typedef {import('./types.js').RoomState} RoomState */
 /** @typedef {import('./types.js').RoomCreated} RoomCreated */
@@ -51,6 +52,8 @@ let roundSeconds = 35;      // з /api/config, для смужки часу
 let clockOffset = 0;        // server_now − локальний час, с
 let sideKey = '';           // ключ останнього рендеру бічної панелі
 let mapKey = '';            // ключ останнього рендеру карти
+let hintKey = '';           // раунд:кількість підказок — коли змінюється, показуємо нову підказку великою
+let flashTimer = null;
 let map;
 let regionsById = new Map();
 let stopPoll = null;
@@ -122,8 +125,8 @@ function hintsList(hints, total = 5) {
         h('span', {}, 'Ще не відкрита')));
     }
   }
-  // Остання відкрита підказка з'являється з анімацією.
-  items[hints.length - 1]?.classList.add('hint--new');
+  // Остання відкрита підказка спалахує жовтим, щоб зала її помітила.
+  items[hints.length - 1]?.classList.add('hint--pop');
   return h('ol', { class: 'hints' }, ...items);
 }
 
@@ -252,6 +255,17 @@ function renderStage(s) {
   if (key === mapKey) return;
   mapKey = key;
   map.reset();
+  hideHintFlash();
+
+  // Ефекти на зміну статусу (один раз на раунд).
+  if (s.status === 'reveal') {
+    const anyCorrect = s.reveal?.guesses.some((g) => g.region_id === s.reveal.answer_region_id);
+    if (anyCorrect) confetti();
+    playSound(anyCorrect ? 'success' : 'fail');
+  } else if (s.status === 'finished') {
+    confetti({ big: true });
+    playSound('fanfare');
+  }
 
   if (s.status === 'reveal' || (s.status === 'finished' && s.reveal)) {
     const r = s.reveal;
@@ -297,6 +311,38 @@ function renderLive() {
   }
 }
 
+// ---------------------------------------------------------------- нова підказка великою
+/** Велика картка з текстом підказки поверх карти на ~4.5 с. */
+function showHintFlash(hint, index, total = 5) {
+  hideHintFlash();
+  const el = h('div', { class: 'hint-flash', role: 'status' },
+    h('span', { class: 'hint-flash__label' }, icon('lightbulb'), `Підказка ${index + 1} / ${total}`),
+    h('p', { class: 'hint-flash__text' }, hint.text));
+  ui.map.parentElement.append(el);
+  playSound('hint');
+  flashTimer = setTimeout(() => {
+    el.classList.add('hint-flash--out');
+    flashTimer = setTimeout(() => el.remove(), 400);
+  }, 4500);
+}
+
+function hideHintFlash() {
+  clearTimeout(flashTimer);
+  document.querySelectorAll('.hint-flash').forEach((n) => n.remove());
+}
+
+function checkNewHint(s) {
+  if (s.status !== 'round') {
+    hintKey = '';
+    return;
+  }
+  const key = `${s.round_no}:${s.hints.length}`;
+  if (key === hintKey) return;
+  hintKey = key;
+  const last = s.hints[s.hints.length - 1];
+  if (last) showHintFlash(last, s.hints.length - 1);
+}
+
 /** @param {RoomState} s */
 function applyState(s) {
   state = s;
@@ -305,6 +351,7 @@ function applyState(s) {
   ui.roundNo.textContent = `Раунд ${s.round_no} / ${s.total_rounds}`;
   renderStage(s);
   renderSide(s);
+  checkNewHint(s);
   renderLive();
 }
 
@@ -385,6 +432,7 @@ function onInitError(e) {
 
 async function init() {
   hydrateIcons();
+  document.querySelector('.topbar__right').append(createSoundToggle());
   const [config, regions, geo] = await Promise.all([getConfig(), getRegions(), getGeo()]);
   roundSeconds = config.round_seconds;
   regionsById = new Map(regions.map((r) => [r.id, r]));

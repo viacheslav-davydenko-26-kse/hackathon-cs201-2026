@@ -11,6 +11,7 @@ import {
 import { createMap } from './map.js';
 import { renderCard } from './card.js';
 import { icon, hydrateIcons } from './icons.js';
+import { confetti, playSound, createSoundToggle } from './fx.js';
 
 /** @typedef {import('./types.js').Hint} Hint */
 /** @typedef {import('./types.js').SoloGuessResponse} SoloGuessResponse */
@@ -232,6 +233,7 @@ async function openHint() {
     const prev = round.hints.length;
     round.hints = hints;
     renderHints(hints.length > prev ? hints.length - 1 : -1);
+    if (hints.length > prev) playSound('hint');
     renderMoreHintButton();
   } catch (e) {
     handleRoundError(e);
@@ -269,6 +271,14 @@ function finishRound(answerId) {
   }
   render();
   if (answerId) showCard(answerId);
+
+  // Вау-момент: правильна відповідь — конфеті й арпеджіо, програш — короткий сумний звук.
+  if (round.attempts.some((a) => a.correct)) {
+    confetti();
+    playSound('success');
+  } else {
+    playSound('fail');
+  }
 }
 
 /** Розгалуження лише за error.code (docs/contract.md §2). */
@@ -299,6 +309,7 @@ function handleRoundError(e) {
 // ---------------------------------------------------------------- старт
 async function init() {
   hydrateIcons();
+  document.querySelector('.topbar__right').append(createSoundToggle());
   const [cfg, regions, geo] = await Promise.all([getConfig(), getRegions(), getGeo()]);
   config = cfg;
   regionsById = new Map(regions.map((r) => [r.id, r]));

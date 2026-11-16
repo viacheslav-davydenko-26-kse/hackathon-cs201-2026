@@ -863,6 +863,101 @@ svg {
   font-weight: 600;
 }
 
+/* ------------------------------------------------------------ ефекти (fx.js) */
+.confetti {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.icon-btn:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+/* нова підказка на хості: велика картка поверх карти на кілька секунд */
+.hint-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 6;
+  width: min(80%, 900px);
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-6);
+  border-radius: 20px;
+  background: var(--accent);
+  color: var(--accent-text);
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 40, 100, 0.35);
+  animation: flash-in 450ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+.hint-flash--out {
+  animation: flash-out 400ms ease forwards;
+}
+
+.hint-flash__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: 999px;
+  background: var(--accent-2);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.hint-flash__text {
+  font-size: var(--fs-xxl);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@keyframes flash-in {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes flash-out {
+  to { opacity: 0; transform: translate(-50%, -40%) scale(0.95); }
+}
+
+/* нова підказка в бічному списку: жовтий спалах, що згасає */
+.hint--pop {
+  animation: hint-pop 2.4s ease;
+}
+
+@keyframes hint-pop {
+  0% { transform: scale(0.96); background: var(--accent-2); box-shadow: 0 0 0 4px var(--accent-2); }
+  15% { transform: scale(1.02); }
+  30% { transform: scale(1); }
+  100% { background: var(--surface-2); box-shadow: 0 0 0 0 transparent; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
