@@ -5,8 +5,10 @@
 """
 from __future__ import annotations
 
+import itertools
 import json
 import random
+from collections import defaultdict
 import sqlite3
 from abc import ABC, abstractmethod
 from collections.abc import Iterable
@@ -63,64 +65,91 @@ def to_hints(facts: list[Fact]) -> list[Hint]:
 
 
 # ------------------------------------------------------------------ алгоритм (Матвій)
+#: «Конкретний» факт підходить щонайбільше стільком регіонам. Ширші («в межах ±5% від середнього»
+#: для половини країни) майже нічого не кажуть про загадану область — беремо їх лише як фолбек.
+SPECIFIC_MAX_CONSISTENT = 12
+PICK_ATTEMPTS = 300
+
+
+def _adjacent_repeats(seq: list[dict]) -> int:
+    return sum(a["category"] == b["category"] for a, b in zip(seq, seq[1:]))
+
+
+def order_hints(chosen: list[dict]) -> list[dict]:
+    """Порядок показу: спершу без сусідніх однакових категорій (якщо це можливо для набору),
+    далі — якомога ближче до зростання info (від найважчої до найлегшої)."""
+    def inversions(seq):
+        return sum(a["info"] > b["info"] for i, a in enumerate(seq) for b in seq[i + 1:])
+    base = sorted(chosen, key=lambda f: f["info"])
+    return list(min(itertools.permutations(base), key=lambda p: (_adjacent_repeats(list(p)), inversions(p))))
+
+
+def _try_build(region_id: str, pool: list[dict], n: int, rng: random.Random,
+               strict: bool = True) -> list[dict] | None:
+    """Одна спроба: n фактів різних метрик, кожен строго звужує кандидатів, лише останній дає {region_id}.
+    Після i-ї підказки лишається ≥ n-i кандидатів, щоб наступним було що звужувати.
+    strict=False — фолбек: дозволяє однозначність раніше і «порожні» підказки після неї."""
+    chosen: list[dict] = []
+    cand: set[str] | None = None
+    cat_count: dict[str, int] = defaultdict(int)
+    for step in range(n):
+        last = step == n - 1
+        options = []
+        for f in pool:
+            if any(f["metric_id"] == c["metric_id"] for c in chosen):
+                continue
+            new = f["_set"] if cand is None else cand & f["_set"]
+            if strict:
+                if cand is not None and len(new) == len(cand):
+                    continue                               # нічого не додає
+                if last != (new == {region_id}) or (not last and len(new) < n - step):
+                    continue                               # однозначність — лише на останній
+            elif last and new != {region_id}:
+                continue
+            options.append((f, new))
+        if not options:
+            return None
+        # Різноманіття: найменш використана категорія; серед неї — важчі (менше info) з шумом.
+        least = min(cat_count[f["category"]] for f, _ in options)
+        options = [o for o in options if cat_count[o[0]["category"]] == least]
+        options.sort(key=lambda o: o[0]["info"] + rng.random() * 1.5)
+        f, cand = options[0]
+        chosen.append(f)
+        cat_count[f["category"]] += 1
+    return chosen
+
+
 def pick_hints_from_list(region_id: str, region_facts: list[dict], n: int = 5, seed: int | None = None) -> list[dict]:
+    """n підказок, перетин `consistent` яких == {region_id}; [] якщо зібрати не вдалося.
+
+    1. Беремо лише конкретні факти (|consistent| ≤ SPECIFIC_MAX_CONSISTENT), а якщо з ними не виходить —
+       усі. Кожна підказка звужує коло кандидатів; однозначно — лише після останньої.
+    2. Набір з найменшою кількістю сусідніх повторів категорії (в ідеалі 0) і більшим розмаїттям.
+    3. Порядок — `order_hints`: без повторів категорій підряд, далі від важчої до легшої.
+    """
     rng = random.Random(seed)
-    # Додаємо легкий шум при однакових info, щоб раунди не повторювалися
-    shuffled = list(region_facts)
-    rng.shuffle(shuffled)
-    sorted_facts = sorted(shuffled, key=lambda f: f["info"])
+    facts = [dict(f, _set=set(json.loads(f["consistent"]))) for f in region_facts if f["region_id"] == region_id]
+    facts = [f for f in facts if region_id in f["_set"]]
+    specific = [f for f in facts if len(f["_set"]) <= SPECIFIC_MAX_CONSISTENT]
 
-    chosen = []
-    used_metrics = set()
-    used_categories = set()
-    candidates = None
-
-    # Крок 1: беремо n-1 підказок із різних категорій, притримуючи 'raw' на кінець
-    for f in sorted_facts:
-        if len(chosen) >= n - 1:
+    best, best_key = None, None
+    for pool, strict in ((specific, True), (facts, True), (facts, False)):
+        for _ in range(PICK_ATTEMPTS):
+            chosen = _try_build(region_id, pool, n, rng, strict)
+            if chosen is None:
+                continue
+            ordered = order_hints(chosen)
+            key = (_adjacent_repeats(ordered), -len({f["category"] for f in ordered}))
+            if best_key is None or key < best_key:
+                best, best_key = ordered, key
+            if key[0] == 0 and -key[1] >= min(3, len({f["category"] for f in pool})):
+                break
+        if best is not None:
             break
-        if f["metric_id"] in used_metrics:
-            continue
-        if f["kind"] == "raw" and len(chosen) < n - 2:
-            continue
-        if f["category"] not in used_categories or len(used_categories) >= 3:
-            chosen.append(f)
-            used_metrics.add(f["metric_id"])
-            used_categories.add(f["category"])
-            c_set = set(json.loads(f["consistent"]))
-            candidates = c_set if candidates is None else (candidates & c_set)
-
-    # Крок 2: 5-та підказка гарантовано звужує перетин до {region_id}
-    for f in sorted_facts:
-        if f["metric_id"] in used_metrics:
-            continue
-        c_set = set(json.loads(f["consistent"]))
-        new_cand = c_set if candidates is None else (candidates & c_set)
-        if new_cand == {region_id}:
-            chosen.append(f)
-            used_metrics.add(f["metric_id"])
-            candidates = new_cand
-            break
-
-    # Фолбек, якщо не вистачило підказок
-    for f in sorted_facts:
-        if len(chosen) >= n:
-            break
-        if f["metric_id"] not in used_metrics:
-            chosen.append(f)
-            used_metrics.add(f["metric_id"])
-
-    chosen.sort(key=lambda f: f["info"])
-
-    return [
-        {
-            "index": idx,
-            "text": f["text_uk"],
-            "metric_id": f["metric_id"],
-            "category": f["category"],
-        }
-        for idx, f in enumerate(chosen)
-    ]
+    if best is None:
+        return []
+    return [{"index": i, "text": f["text_uk"], "metric_id": f["metric_id"], "category": f["category"]}
+            for i, f in enumerate(best)]
 
 
 def pick_hints(conn: sqlite3.Connection, region_id: str, n: int = 5, seed: int | None = None) -> list[dict]:

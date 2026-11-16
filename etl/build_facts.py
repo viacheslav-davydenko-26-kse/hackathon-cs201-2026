@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from dataclasses import asdict
 
 from app.domain import Fact, MetricInfo, RegionInfo, RegionMetric
+from etl import metrics_catalog
 
 TOTAL_PLAYABLE = 25
 
@@ -60,123 +61,122 @@ def _format_raw_value(value: int | float) -> str:
     return text.replace(",", "\u00a0")
 
 
+#: Смуги відхилення від середнього по областях: (нижня межа, верхня межа) у % і текст.
+#: Межі напіввідкриті [lo, hi). Текст і `consistent` беруться з ОДНІЄЇ смуги, тож твердження
+#: «на 5–20% вище середнього» істинне рівно для регіонів у `consistent` — ні більше, ні менше.
+RELATIVE_BANDS: list[tuple[float, float, str]] = [
+    (-math.inf, -50, "менше половини середнього"),
+    (-50, -35, "на 35–50% нижче середнього"),
+    (-35, -20, "на 20–35% нижче середнього"),
+    (-20, -5, "на 5–20% нижче середнього"),
+    (-5, 5, "в межах ±5% від середнього"),
+    (5, 20, "на 5–20% вище середнього"),
+    (20, 35, "на 20–35% вище середнього"),
+    (35, 50, "на 35–50% вище середнього"),
+    (50, 100, "в 1,5–2 рази вище середнього"),
+    (100, 200, "у 2–3 рази вище середнього"),
+    (200, math.inf, "більш ніж утричі вище середнього"),
+]
+
+
+def relative_band(value: float, avg: float) -> int:
+    """Індекс смуги в RELATIVE_BANDS для відхилення value від avg."""
+    diff_pct = (value - avg) / avg * 100.0 if avg else 0.0
+    for i, (lo, hi, _) in enumerate(RELATIVE_BANDS):
+        if lo <= diff_pct < hi:
+            return i
+    return len(RELATIVE_BANDS) - 1
+
+
+def _with_unit(value: str, unit: str) -> str:
+    if not unit:
+        return value
+    return f"{value}{unit}" if unit.startswith("%") else f"{value} {unit}"
+
+
+def _fact(region_id: str, metric_id: str, category: str, kind: str, text: str, consistent) -> dict:
+    cons = sorted(consistent)
+    return {
+        "region_id": region_id, "metric_id": metric_id, "category": category, "kind": kind,
+        "text_uk": text, "consistent": json.dumps(cons, ensure_ascii=False),
+        "info": calc_info(cons), "riddle_uk": None,
+    }
+
+
 def facts_from_rows(catalog: dict[str, dict], by_metric: dict[str, list[dict]]) -> list[dict]:
-    """catalog: metric_id → {title_uk, unit, kind, category}; by_metric: metric_id → рядки region_metrics."""
+    """catalog: metric_id → {title_uk, unit, kind, category}; by_metric: metric_id → рядки region_metrics.
+
+    Тексти короткі: «{label}: {що саме}». label/одиниця — з etl.metrics_catalog, інакше з catalog.
+    Середнє — просте середнє по регіонах з даними (а не зважене по населенню).
+    """
     facts: list[dict] = []
 
     for metric_id, rows in by_metric.items():
         meta = catalog.get(metric_id)
-        if not meta:
+        if not meta or not metrics_catalog.spec(metric_id).enabled:
             continue
-        title = meta["title_uk"]
-        unit = meta["unit"]
-        kind = meta["kind"]
+        label = metrics_catalog.label(metric_id, meta["title_uk"])
+        unit = metrics_catalog.hint_unit(metric_id, meta["unit"])
         category = meta["category"]
 
-        # 1. Категоріальні метрики (nmt_top_elective, cars_top_brand тощо)
-        if kind == "categorical":
-            by_text = defaultdict(list)
+        # 1. Категоріальні: «Топ-предмет НМТ на вибір: біологія»
+        if meta["kind"] == "categorical":
+            by_text = defaultdict(set)
             for r in rows:
                 if r["value_text"]:
-                    by_text[r["value_text"]].append(r["region_id"])
-
+                    by_text[r["value_text"]].add(r["region_id"])
             for r in rows:
-                val_txt = r["value_text"]
-                if not val_txt:
-                    continue
-                cons = sorted(by_text[val_txt])
-                facts.append({
-                    "region_id": r["region_id"],
-                    "metric_id": metric_id,
-                    "category": category,
-                    "kind": "categorical",
-                    "text_uk": f"{title} — {val_txt}",
-                    "consistent": json.dumps(cons, ensure_ascii=False),
-                    "info": calc_info(cons),
-                    "riddle_uk": None,
-                })
+                if r["value_text"]:
+                    facts.append(_fact(r["region_id"], metric_id, category, "categorical",
+                                       f"{label}: {r['value_text']}", by_text[r["value_text"]]))
+            continue
 
-        # 2. Числові метрики (rank, relative, raw)
-        elif kind == "numeric":
-            valid = [r for r in rows if r["value"] is not None]
-            if not valid:
-                continue
+        # 2. Числові: rank, relative, raw
+        if meta["kind"] != "numeric":
+            continue
+        valid = [r for r in rows if r["value"] is not None]
+        if not valid:
+            continue
 
-            # Different source values can produce identical text after rounding.
-            # Group within this metric using exactly the formatter used below.
-            by_displayed_value = defaultdict(set)
-            for r in valid:
-                by_displayed_value[_format_raw_value(r["value"])].add(r["region_id"])
+        # Різні значення можуть дати однаковий текст після округлення — групуємо тим самим форматером.
+        by_displayed_value = defaultdict(set)
+        for r in valid:
+            by_displayed_value[_format_raw_value(r["value"])].add(r["region_id"])
 
-            avg_val = sum(r["value"] for r in valid) / len(valid)
-            top3 = sorted([r["region_id"] for r in valid if r["rank"] and r["rank"] <= 3])
-            bot3 = sorted([r["region_id"] for r in valid if r["rank"] and r["n_ranked"] and r["rank"] > r["n_ranked"] - 3])
+        avg_val = sum(r["value"] for r in valid) / len(valid)
+        by_band = defaultdict(set)
+        for r in valid:
+            by_band[relative_band(r["value"], avg_val)].add(r["region_id"])
 
-            buckets = defaultdict(list)
-            reg_bucket = {}
-            for r in valid:
-                diff_pct = ((r["value"] - avg_val) / avg_val) * 100.0 if avg_val != 0 else 0.0
-                b = int(round(diff_pct / 10.0) * 10)
-                buckets[b].append(r["region_id"])
-                reg_bucket[r["region_id"]] = b
+        rank1 = {r["region_id"] for r in valid if r["rank"] == 1}
+        top3 = {r["region_id"] for r in valid if r["rank"] and r["rank"] <= 3}
+        bot3 = {r["region_id"] for r in valid if r["rank"] and r["n_ranked"] and r["rank"] > r["n_ranked"] - 3}
 
-            for r in valid:
-                reg = r["region_id"]
-                val = r["value"]
-                rank = r["rank"]
-                n_ranked = r["n_ranked"]
+        period = metrics_catalog.period(meta["unit"]) if metrics_catalog.spec(metric_id).period_from_unit else ""
+        raw_label = f"{label} ({period})" if period else label
 
-                # A. Rank
-                rank1_regions = sorted([r["region_id"] for r in valid if r["rank"] == 1])
+        for r in valid:
+            reg, rank, n_ranked = r["region_id"], r["rank"], r["n_ranked"]
 
-                # Усередині циклу по регіонах:
-                if rank == 1:
-                    if len(rank1_regions) == 1:
-                        r1_text = f"1-ше місце в Україні: {title}"
-                    else:
-                        r1_text = f"Ділить 1-ше місце в Україні: {title}"
-                    facts.append({
-                        "region_id": reg, "metric_id": metric_id, "category": category,
-                        "kind": "rank", "text_uk": r1_text,
-                        "consistent": json.dumps(rank1_regions), "info": calc_info(rank1_regions), "riddle_uk": None,
-                    })
-                elif rank and rank <= 3:
-                    facts.append({
-                        "region_id": reg, "metric_id": metric_id, "category": category,
-                        "kind": "rank", "text_uk": f"У топ-3 областей за показником «{title}»",
-                        "consistent": json.dumps(top3), "info": calc_info(top3), "riddle_uk": None,
-                    })
-                elif rank and n_ranked and rank > n_ranked - 3:
-                    facts.append({
-                        "region_id": reg, "metric_id": metric_id, "category": category,
-                        "kind": "rank", "text_uk": f"В останніх 3 областях за показником «{title}»",
-                        "consistent": json.dumps(bot3), "info": calc_info(bot3), "riddle_uk": None,
-                    })
+            # A. Rank: 1-ше місце / трійка найвищих / трійка найнижчих (1 = найбільше значення)
+            if rank == 1:
+                text = f"{label}: найвищий показник серед областей" if len(rank1) == 1 \
+                    else f"{label}: ділить найвищий показник серед областей"
+                facts.append(_fact(reg, metric_id, category, "rank", text, rank1))
+            elif rank and rank <= 3:
+                facts.append(_fact(reg, metric_id, category, "rank", f"{label}: у трійці найвищих", top3))
+            elif rank and n_ranked and rank > n_ranked - 3:
+                facts.append(_fact(reg, metric_id, category, "rank", f"{label}: у трійці найнижчих", bot3))
 
-                # B. Relative (бакети ±10%)
-                b = reg_bucket[reg]
-                cons_rel = sorted(buckets[b])
-                if b == 0:
-                    rel_txt = f"{title}: приблизно на рівні середнього по Україні (±10%)"
-                elif b > 0:
-                    rel_txt = f"{title}: приблизно на {abs(b)}% вище за середнє по Україні"
-                else:
-                    rel_txt = f"{title}: приблизно на {abs(b)}% нижче за середнє по Україні"
+            # B. Relative: смуга відхилення від середнього
+            band = relative_band(r["value"], avg_val)
+            facts.append(_fact(reg, metric_id, category, "relative",
+                               f"{label}: {RELATIVE_BANDS[band][2]}", by_band[band]))
 
-                facts.append({
-                    "region_id": reg, "metric_id": metric_id, "category": category,
-                    "kind": "relative", "text_uk": rel_txt,
-                    "consistent": json.dumps(cons_rel), "info": calc_info(cons_rel), "riddle_uk": None,
-                })
-
-                # C. Raw: усі регіони з однаковим показаним значенням.
-                val_str = _format_raw_value(val)
-                cons_raw = sorted(by_displayed_value[val_str])
-                facts.append({
-                    "region_id": reg, "metric_id": metric_id, "category": category,
-                    "kind": "raw", "text_uk": f"{title}: {val_str} {unit}".strip(),
-                    "consistent": json.dumps(cons_raw), "info": calc_info(cons_raw), "riddle_uk": None,
-                })
+            # C. Raw: усі регіони з однаковим показаним значенням
+            val_str = _format_raw_value(r["value"])
+            facts.append(_fact(reg, metric_id, category, "raw",
+                               f"{raw_label}: {_with_unit(val_str, unit)}", by_displayed_value[val_str]))
 
     return facts
 
@@ -201,7 +201,8 @@ class FactGenerator(ABC):
     """Контракт `generate()`:
       * факти лише для ігрових регіонів; `consistent` рахується серед ігрових і містить сам регіон;
       * `info = info_bits(len(consistent), n_playable)`;
-      * види: rank (топ-1/топ-3/останні-3), relative (бакети ±10%), raw, categorical;
+      * види: rank (топ-1/топ-3/останні-3), relative (смуги RELATIVE_BANDS), raw, categorical;
+      * `consistent` — РІВНО ті регіони, для яких текст факту істинний;
       * метрика з NaN/без рядка для регіону → фактів з неї для регіону нема;
       * тексти без назви регіону;
       * детермінований (без випадковості).
