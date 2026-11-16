@@ -12,4 +12,4 @@ TOTAL_ROUNDS = int(os.getenv("TOTAL_ROUNDS", "5"))
 TOTAL_HINTS = 5
 SOLO_MAX_ATTEMPTS = 3
 #: 'random' — тимчасовий RandomHintPicker; 'facts' — FactHintPicker Матвія
-HINT_PICKER = os.getenv("HINT_PICKER", "random")
+HINT_PICKER = os.getenv("HINT_PICKER", "facts")

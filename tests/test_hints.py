@@ -17,7 +17,6 @@ def test_not_playable(repo):
         RandomHintPicker(repo).pick("crimea")
 
 
-@pytest.mark.xfail(raises=NotImplementedError, reason="FactHintPicker — Матвій")
 def test_fact_picker_unique_answer(repo):
     picker = FactHintPicker(repo)
     for region in repo.playable_regions():
