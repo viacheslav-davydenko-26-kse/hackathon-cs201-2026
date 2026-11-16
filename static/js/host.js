@@ -12,11 +12,13 @@
 
 import {
   getConfig, getRegions, getGeo, roomCreate, roomStart, roomNext, pollRoom, ApiError, HEAT_COLORS,
-} from './api.js';
-import { createMap } from './map.js';
-import { renderCard } from './card.js';
-import { icon, hydrateIcons } from './icons.js';
-import { confetti, playSound, createSoundToggle } from './fx.js';
+} from './api.js?v=2';
+import { createMap } from './map.js?v=2';
+import { renderCard } from './card.js?v=2';
+import { icon, hydrateIcons } from './icons.js?v=2';
+import {
+  confetti, playSound, createSoundToggle, animateNumber, stagger, buttonBusy,
+} from './fx.js?v=2';
 
 /** @typedef {import('./types.js').RoomState} RoomState */
 /** @typedef {import('./types.js').RoomCreated} RoomCreated */
@@ -131,12 +133,22 @@ function hintsList(hints, total = 5) {
 }
 
 function leaderboard(rows, { showDelta = false, limit = 10 } = {}) {
-  return h('ol', { class: 'leaderboard' },
-    ...rows.slice(0, limit).map((r, i) => h('li', { class: `lb-row${i === 0 ? ' lb-row--first' : ''}` },
-      h('span', { class: 'lb-row__place' }, i === 0 ? icon('crown') : String(i + 1)),
-      h('span', { class: 'lb-row__name' }, r.name),
-      h('span', { class: 'lb-row__delta' }, showDelta && r.delta > 0 ? `+${r.delta}` : ''),
-      h('span', { class: 'lb-row__score' }, String(r.score)))));
+  const list = h('ol', { class: 'leaderboard' },
+    ...rows.slice(0, limit).map((r, i) => {
+      const score = h('span', { class: 'lb-row__score' }, String(r.score));
+      // На reveal бали «докручуються» від старого рахунку до нового.
+      if (showDelta && r.delta > 0) {
+        score.textContent = String(r.score - r.delta);
+        setTimeout(() => animateNumber(score, r.score, { ms: 900 }), 500 + i * 120);
+      }
+      return h('li', { class: `lb-row${i === 0 ? ' lb-row--first' : ''}` },
+        h('span', { class: 'lb-row__place' }, i === 0 ? icon('crown') : String(i + 1)),
+        h('span', { class: 'lb-row__name' }, r.name),
+        h('span', { class: 'lb-row__delta' }, showDelta && r.delta > 0 ? `+${r.delta}` : ''),
+        score);
+    }));
+  stagger(list.children);
+  return list;
 }
 
 function button(text, iconName, onclick, primary = true) {
@@ -245,11 +257,23 @@ function showCard(container, card) {
 }
 
 // ---------------------------------------------------------------- рендер
+/** Показує елемент з плавною появою (лише якщо він був прихований). */
+function reveal(el, show) {
+  if (show && el.hidden) {
+    el.hidden = false;
+    el.classList.remove('stage-swap');
+    void el.offsetWidth; // перезапуск CSS-анімації
+    el.classList.add('stage-swap');
+  } else if (!show) {
+    el.hidden = true;
+  }
+}
+
 function renderStage(s) {
   const lobby = s.status === 'lobby';
   ui.stageLoading.hidden = true;
-  ui.qrStage.hidden = !lobby;
-  ui.map.hidden = lobby;
+  reveal(ui.qrStage, lobby);
+  reveal(ui.map, !lobby);
 
   const key = `${s.status}:${s.round_no}`;
   if (key === mapKey) return;
@@ -287,7 +311,11 @@ function renderSide(s) {
   sideKey = key;
   live = {};
   const build = { lobby: sideLobby, round: sideRound, reveal: sideReveal, finished: sideFinished }[s.status];
+  const prevStatus = ui.side.dataset.status;
   ui.side.replaceChildren(...(build ? build(s) : []));
+  ui.side.dataset.status = s.status;
+  // Каскад лише при зміні екрана (а не коли, наприклад, приєднався ще один гравець у лобі).
+  if (prevStatus !== s.status) stagger([...ui.side.children].filter((el) => !el.hidden));
 }
 
 function renderLive() {
@@ -363,20 +391,22 @@ function showFatal(message) {
 }
 
 // ---------------------------------------------------------------- дії хоста
-async function hostAction(fn) {
+async function hostAction(fn, btn) {
   if (busy || !room) return;
   busy = true;
+  const done = btn ? buttonBusy(btn) : () => {};
   try {
     applyState(await fn(room.code, room.host_key));
   } catch (e) {
     handleError(e);
   } finally {
+    done();
     busy = false;
   }
 }
 
-const onStart = () => hostAction(roomStart);
-const onNext = () => hostAction(roomNext);
+const onStart = (e) => hostAction(roomStart, e?.currentTarget);
+const onNext = (e) => hostAction(roomNext, e?.currentTarget);
 
 function onNewRoom() {
   forgetRoom();

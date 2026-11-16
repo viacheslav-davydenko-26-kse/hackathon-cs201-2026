@@ -7,11 +7,13 @@
 
 import {
   getConfig, getRegions, getGeo, getCard, soloStart, soloHint, soloGuess, ApiError, HEAT_COLORS,
-} from './api.js';
-import { createMap } from './map.js';
-import { renderCard } from './card.js';
-import { icon, hydrateIcons } from './icons.js';
-import { confetti, playSound, createSoundToggle } from './fx.js';
+} from './api.js?v=2';
+import { createMap } from './map.js?v=2';
+import { renderCard } from './card.js?v=2';
+import { icon, hydrateIcons } from './icons.js?v=2';
+import {
+  confetti, playSound, createSoundToggle, animateNumber, stagger, buttonBusy,
+} from './fx.js?v=2';
 
 /** @typedef {import('./types.js').Hint} Hint */
 /** @typedef {import('./types.js').SoloGuessResponse} SoloGuessResponse */
@@ -152,7 +154,7 @@ function renderAttempts() {
 }
 
 function renderScore() {
-  ui.score.textContent = String(sessionScore + round.points);
+  animateNumber(ui.score, sessionScore + round.points);
   ui.roundLabel.textContent = `Раунд ${roundNo}`;
 }
 
@@ -228,6 +230,7 @@ async function startRound() {
 async function openHint() {
   if (busy || !round || round.finished) return;
   busy = true;
+  const done = buttonBusy(ui.moreHint);
   try {
     const { hints } = await soloHint(round.id);
     const prev = round.hints.length;
@@ -238,6 +241,7 @@ async function openHint() {
   } catch (e) {
     handleRoundError(e);
   } finally {
+    done();
     busy = false;
   }
 }
@@ -252,6 +256,7 @@ async function guess(regionId) {
     round.points = res.total_points;
     map.colorRegion(regionId, HEAT_COLORS[res.heat]);
     map.select(regionId);
+    map.pulse?.(regionId, HEAT_COLORS[res.heat]);
     if (res.finished) finishRound(res.answer_region_id);
     else render();
   } catch (e) {
@@ -319,12 +324,15 @@ async function init() {
   const [cfg, regions, geo] = await Promise.all([getConfig(), getRegions(), getGeo()]);
   config = cfg;
   regionsById = new Map(regions.map((r) => [r.id, r]));
-  map = createMap(ui.map, geo, { onClick: guess });
+  map = createMap(ui.map, geo, { onClick: guess, zoomable: true });
+  ui.map.removeAttribute('aria-busy');
 
   ui.moreHint.addEventListener('click', openHint);
   ui.nextRound.addEventListener('click', startRound);
 
   await startRound();
+  // Перша поява: панелі виїжджають каскадом.
+  stagger(document.querySelectorAll('.side > :not([hidden])'));
 }
 
 init().catch((e) => {
