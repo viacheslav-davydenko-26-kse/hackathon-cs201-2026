@@ -7,6 +7,7 @@
 //   3. Кольори за замовчуванням задає CSS (.region, .region--disabled), а colorRegion() ставить style.fill поверх.
 
 import { geoMercator, geoPath, geoArea } from 'https://cdn.jsdelivr.net/npm/d3-geo@3.1.1/+esm';
+import { icon } from './icons.js?v=2';
 
 /** @typedef {import('./types.js').Heat} Heat */
 
@@ -16,6 +17,7 @@ import { geoMercator, geoPath, geoArea } from 'https://cdn.jsdelivr.net/npm/d3-g
  * @property {boolean} [interactive=true]             false → без hover/кліків (проєктор у reveal)
  * @property {boolean} [labels=false]                 підписи short_uk
  * @property {number} [kyivRadius=10]                 клікабельне коло поверх Києва, px
+ * @property {boolean} [zoomable=false]               зум: щипок / колесо / кнопки +−, перетягування
  */
 
 /**
@@ -72,7 +74,7 @@ function mix(from, to, t) {
  * @returns {MapView}
  */
 export function createMap(el, geo, opts = {}) {
-  const { onClick, labels = false, kyivRadius = 10 } = opts;
+  const { onClick, labels = false, kyivRadius = 10, zoomable = false } = opts;
   let interactive = opts.interactive ?? true;
 
   const features = geo.features.map(fixWinding);
@@ -92,10 +94,13 @@ export function createMap(el, geo, opts = {}) {
     role: 'img',
     'aria-label': 'Карта України',
   });
+  // gView — «камера»: зум і зсув задаються одним transform на цій групі.
+  const gView = svgEl('g');
   const gRegions = svgEl('g');
   const gLines = svgEl('g', { 'pointer-events': 'none' });
   const gLabels = svgEl('g', { 'pointer-events': 'none' });
-  svg.append(gRegions, gLines, gLabels);
+  gView.append(gRegions, gLines, gLabels);
+  svg.append(gView);
 
   const tooltip = document.createElement('div');
   tooltip.className = 'map-tooltip';
@@ -166,7 +171,13 @@ export function createMap(el, geo, opts = {}) {
 
   const onLeave = () => { tooltip.hidden = true; };
 
+  let suppressClick = false; // після перетягування карти «клік» не має обирати область
+
   const onClickRegion = (e) => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
     const r = regionFromEvent(e);
     if (!interactive || !r || !r.playable) return;
     onClick?.(r.props.region_id);
@@ -184,6 +195,173 @@ export function createMap(el, geo, opts = {}) {
     if (!interactive) tooltip.hidden = true;
   }
   applyInteractive();
+
+  // ---------------------------------------------------------------- зум
+  // Камера: k — масштаб (1…MAX_ZOOM), tx/ty — зсув у координатах viewBox.
+  // Точка p карти показується на екрані в (tx + p·k, ty + p·k).
+  const MAX_ZOOM = 6;
+  let k = 1;
+  let tx = 0;
+  let ty = 0;
+  let zoomUi = null;
+
+  function applyView() {
+    // Не даємо «вивезти» карту за межі: її край завжди торкається краю рамки.
+    tx = Math.min(0, Math.max(WIDTH - WIDTH * k, tx));
+    ty = Math.min(0, Math.max(height - height * k, ty));
+    gView.setAttribute('transform', `translate(${tx} ${ty}) scale(${k})`);
+    // Зона кліку й кільце Києва — сталого розміру на екрані, а не ростуть разом із картою.
+    kyivHit?.setAttribute('r', kyivRadius / k);
+    kyivRing?.setAttribute('r', (kyivRadius + 4) / k);
+    svg.classList.toggle('map-svg--zoomed', k > 1.01);
+    if (zoomUi) {
+      zoomUi.out.disabled = k <= 1.01;
+      zoomUi.reset.disabled = k <= 1.01;
+      zoomUi.in.disabled = k >= MAX_ZOOM - 0.01;
+    }
+  }
+
+  /** Масштабує навколо точки (x, y) у координатах viewBox: ця точка лишається під пальцем. */
+  function zoomAt(x, y, factor) {
+    const next = Math.min(MAX_ZOOM, Math.max(1, k * factor));
+    tx = x - (x - tx) * (next / k);
+    ty = y - (y - ty) * (next / k);
+    k = next;
+    applyView();
+    hideZoomHint();
+  }
+
+  function resetZoom() {
+    k = 1;
+    tx = 0;
+    ty = 0;
+    applyView();
+  }
+
+  /** Екранні координати → координати viewBox (з урахуванням масштабування SVG на сторінці). */
+  function toView(clientX, clientY) {
+    const pt = svg.createSVGPoint();
+    pt.x = clientX;
+    pt.y = clientY;
+    const p = pt.matrixTransform(svg.getScreenCTM().inverse());
+    return { x: p.x, y: p.y };
+  }
+
+  function hideZoomHint() {
+    zoomUi?.hint.classList.add('map-zoom-hint--hidden');
+  }
+
+  if (zoomable) {
+    svg.classList.add('map-svg--zoomable');
+
+    // Кнопки + / − / ⟲ у кутку карти й підказка, що карту можна збільшити.
+    const btn = (name, label) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'map-zoom__btn';
+      b.title = label;
+      b.setAttribute('aria-label', label);
+      b.append(icon(name));
+      return b;
+    };
+    zoomUi = {
+      in: btn('zoom-in', 'Збільшити'),
+      out: btn('zoom-out', 'Зменшити'),
+      reset: btn('rotate-ccw', 'Показати всю карту'),
+      hint: document.createElement('div'),
+    };
+    const box = document.createElement('div');
+    box.className = 'map-zoom';
+    box.append(zoomUi.in, zoomUi.out, zoomUi.reset);
+    zoomUi.hint.className = 'map-zoom-hint';
+    zoomUi.hint.append(icon('zoom-in'), 'Збільш двома пальцями або +');
+    el.append(box, zoomUi.hint);
+    setTimeout(hideZoomHint, 6000);
+
+    // Кнопки масштабують навколо центру рамки (zoomAt приймає координати рамки, а не карти).
+    const center = () => ({ x: WIDTH / 2, y: height / 2 });
+    // Кнопки — з плавною анімацією (клас на мить), жести — без неї.
+    const animated = (fn) => () => {
+      svg.classList.add('map-svg--animate');
+      fn();
+      setTimeout(() => svg.classList.remove('map-svg--animate'), 260);
+    };
+    zoomUi.in.addEventListener('click', animated(() => { const c = center(); zoomAt(c.x, c.y, 1.6); }));
+    zoomUi.out.addEventListener('click', animated(() => { const c = center(); zoomAt(c.x, c.y, 1 / 1.6); }));
+    zoomUi.reset.addEventListener('click', animated(resetZoom));
+
+    // Колесо миші (ноутбук).
+    svg.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const p = toView(e.clientX, e.clientY);
+      zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0015));
+    }, { passive: false });
+
+    // Щипок двома пальцями і перетягування. Слухаємо window, а не захоплюємо pointer,
+    // інакше браузер шле click на <svg> замість області, і тап перестає обирати регіон.
+    const pointers = new Map();
+    let last = null;      // попередній центр жесту і відстань між пальцями
+    let moved = 0;        // скільки пікселів пройшов жест — щоб відрізнити тап від перетягування
+
+    const gesture = () => {
+      const pts = [...pointers.values()];
+      const c = pts.reduce((a, p) => ({ x: a.x + p.x / pts.length, y: a.y + p.y / pts.length }), { x: 0, y: 0 });
+      const dist = pts.length > 1 ? Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) : 0;
+      return { c, dist, n: pts.length };
+    };
+
+    const onMoveG = (e) => {
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const g = gesture();
+      if (last && g.n === last.n) {
+        moved += Math.hypot(g.c.x - last.c.x, g.c.y - last.c.y);
+        const a = toView(last.c.x, last.c.y);
+        const b = toView(g.c.x, g.c.y);
+        if (g.n >= 2 && last.dist > 0) {
+          zoomAt(b.x, b.y, g.dist / last.dist);
+          moved += 10; // щипок — точно не тап
+        }
+        if (k > 1.01 || g.n >= 2) {
+          tx += b.x - a.x;
+          ty += b.y - a.y;
+          applyView();
+        }
+      }
+      last = g;
+    };
+
+    const onUpG = (e) => {
+      pointers.delete(e.pointerId);
+      last = pointers.size ? gesture() : null;
+      if (moved > 8) suppressClick = true;
+      if (!pointers.size) {
+        window.removeEventListener('pointermove', onMoveG);
+        window.removeEventListener('pointerup', onUpG);
+        window.removeEventListener('pointercancel', onUpG);
+        // suppressClick діє лише на click одразу після жесту
+        setTimeout(() => { suppressClick = false; }, 50);
+      }
+    };
+
+    svg.addEventListener('pointerdown', (e) => {
+      if (!pointers.size) {
+        moved = 0;
+        window.addEventListener('pointermove', onMoveG);
+        window.addEventListener('pointerup', onUpG);
+        window.addEventListener('pointercancel', onUpG);
+      }
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      last = gesture();
+    });
+
+    // Подвійний клік/тап — збільшити в цьому місці.
+    svg.addEventListener('dblclick', (e) => {
+      const p = toView(e.clientX, e.clientY);
+      zoomAt(p.x, p.y, 2);
+    });
+  }
+  applyView();
 
   // ---------------------------------------------------------------- API
   function colorRegion(regionId, color) {
@@ -249,6 +427,7 @@ export function createMap(el, geo, opts = {}) {
     for (const id of regions.keys()) colorRegion(id, null);
     select(null);
     gLines.replaceChildren();
+    resetZoom();
   }
 
   function setInteractive(enabled) {

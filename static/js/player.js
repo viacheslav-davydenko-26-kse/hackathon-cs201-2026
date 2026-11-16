@@ -452,7 +452,7 @@ async function init() {
   geo = g;
   // Київ на телефоні крихітний: r=36 у координатах карти ≈ 23 px на екрані 375 px.
   // Більше не робимо, бо зона почне перекривати Київщину.
-  map = createMap(ui.map, geo, { onClick: onMapClick, kyivRadius: 36 });
+  map = createMap(ui.map, geo, { onClick: onMapClick, kyivRadius: 36, zoomable: true });
 
   const room = roomFromUrl();
   const saved = loadMe();
