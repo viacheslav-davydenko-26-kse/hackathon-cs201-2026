@@ -8,9 +8,9 @@
 import {
   getConfig, getRegions, getGeo, getCard, soloStart, soloHint, soloGuess, ApiError, HEAT_COLORS,
 } from './api.js?v=2';
-import { createMap } from './map.js?v=2';
+import { createMap, regionLabel } from './map.js?v=2';
 import { renderCard } from './card.js?v=2';
-import { icon, hydrateIcons } from './icons.js?v=2';
+import { icon, hydrateIcons, difficultyMeter } from './icons.js?v=2';
 import {
   confetti, playSound, createSoundToggle, animateNumber, stagger, buttonBusy,
 } from './fx.js?v=2';
@@ -81,7 +81,7 @@ function newRoundState(r) {
   };
 }
 
-const regionName = (id) => regionsById.get(id)?.short_uk ?? id;
+const regionName = (id) => regionLabel(regionsById.get(id)?.name_uk) || id;
 
 /** 1 бал, 2 бали, 5 балів, 11 балів, 21 бал. */
 function pointsWord(n) {
@@ -111,7 +111,7 @@ function renderHints(newIndex = -1) {
         h('span', { class: 'hint__num' }, String(i + 1)),
         h('span', { class: 'hint__body' },
           h('span', {}, hint.text),
-          h('span', { class: 'hint__tag' }, icon(cat.icon), cat.label))));
+          h('span', { class: 'hint__meta' }, h('span', { class: 'hint__tag' }, icon(cat.icon), cat.label), difficultyMeter(hint.index ?? i)))));
     } else {
       items.push(h('li', { class: 'hint hint--locked' },
         h('span', { class: 'hint__num' }, icon('lock')),
@@ -324,7 +324,7 @@ async function init() {
   const [cfg, regions, geo] = await Promise.all([getConfig(), getRegions(), getGeo()]);
   config = cfg;
   regionsById = new Map(regions.map((r) => [r.id, r]));
-  map = createMap(ui.map, geo, { onClick: guess, zoomable: true });
+  map = createMap(ui.map, geo, { onClick: guess, zoomable: true, labels: 'zoom' });
   ui.map.removeAttribute('aria-busy');
 
   ui.moreHint.addEventListener('click', openHint);

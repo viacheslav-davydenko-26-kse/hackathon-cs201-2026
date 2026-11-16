@@ -56,6 +56,36 @@ export function icon(name, cls = '') {
   return svg;
 }
 
+const DIFFICULTY_LABELS = ['Дуже складна', 'Складна', 'Середня', 'Простіша', 'Легка'];
+
+/**
+ * Мінімалістичний індикатор складності підказки: 5 рисок, заповнених за складністю.
+ * Підказка 0 — найважча (5 рисок), остання — найлегша (1 риска).
+ * @param {number} index   Hint.index, 0-based
+ * @param {number} [total=5]
+ * @returns {HTMLSpanElement}
+ */
+export function difficultyMeter(index, total = 5) {
+  const level = Math.max(1, total - index); // 5 … 1
+  const el = document.createElement('span');
+  el.className = `difficulty difficulty--${level}`;
+  const label = DIFFICULTY_LABELS[Math.min(index, DIFFICULTY_LABELS.length - 1)];
+  el.title = `Складність: ${label.toLowerCase()}`;
+  el.setAttribute('aria-label', el.title);
+  const bars = document.createElement('span');
+  bars.className = 'difficulty__bars';
+  for (let i = 1; i <= total; i++) {
+    const bar = document.createElement('i');
+    if (i <= level) bar.className = 'on';
+    bars.append(bar);
+  }
+  const text = document.createElement('span');
+  text.className = 'difficulty__label';
+  text.textContent = label;
+  el.append(bars, text);
+  return el;
+}
+
 /** Замінює всі <i data-icon="name" class="..."> у root на SVG-іконки. */
 export function hydrateIcons(root = document) {
   root.querySelectorAll('i[data-icon]').forEach((el) => {

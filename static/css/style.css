@@ -606,8 +606,9 @@ svg {
 }
 
 /* білий контур навколо тексту — підпис читається і на сірій, і на кольоровій області */
+/* --fit (0.6…1) ставить map.js: довгі назви у вузьких областях стають дрібнішими */
 .map-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--fit, 1));
   fill: #8a93a3;
   paint-order: stroke;
   stroke: rgba(255, 255, 255, 0.85);
@@ -616,7 +617,7 @@ svg {
 }
 
 .is-projector .map-label {
-  font-size: 15px;
+  font-size: calc(15px * var(--fit, 1));
   font-weight: 600;
   fill: #5b6475;
 }
@@ -1332,7 +1333,20 @@ svg {
   background: linear-gradient(to top, var(--bg) 70%, rgba(244, 246, 249, 0));
 }
 
+/* «Відповісти: Івано-Франківська обл.» — завжди в один рядок */
+.action-bar #guess-label {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 420px) {
+  .action-bar .btn { font-size: 0.9375rem; padding-inline: var(--sp-3); }
+}
+
 .action-bar .btn {
+  display: flex; /* inline-flex не центрується через margin: auto */
   max-width: 560px;
   margin: 0 auto;
   box-shadow: var(--shadow-lg);
@@ -1357,6 +1371,20 @@ svg {
 .map-svg--zoomable { touch-action: pan-y; cursor: default; }
 .map-svg--zoomed { touch-action: none; cursor: grab; }
 .map-svg--zoomed:active { cursor: grabbing; }
+
+/* підписи на збільшеній карті (режим labels: 'zoom'): розмір задає map.js */
+.map-label--zoom {
+  fill: #4a5363;
+  font-weight: 600;
+}
+
+.map-svg g.map-labels--hidden .map-label--zoom {
+  opacity: 0;
+}
+
+.map-label--zoom {
+  transition: opacity 200ms ease;
+}
 
 .map-zoom {
   position: absolute;
@@ -1419,6 +1447,64 @@ svg {
 
 .map-zoom-hint--hidden {
   opacity: 0;
+}
+
+/* ------------------------------------------------------------ складність підказки */
+.hint__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+}
+
+.difficulty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* риски-«сходинки» як індикатор сигналу: що вища складність, то більше заповнених */
+.difficulty__bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+
+.difficulty__bars i {
+  width: 3px;
+  border-radius: 1px;
+  background: var(--border);
+}
+
+.difficulty__bars i:nth-child(1) { height: 4px; }
+.difficulty__bars i:nth-child(2) { height: 6px; }
+.difficulty__bars i:nth-child(3) { height: 8px; }
+.difficulty__bars i:nth-child(4) { height: 10px; }
+.difficulty__bars i:nth-child(5) { height: 12px; }
+
+/* колір за рівнем: складна — червонувата, легка — зелена */
+.difficulty--5 .on, .difficulty--4 .on { background: var(--heat-hot); }
+.difficulty--3 .on { background: var(--heat-warm); }
+.difficulty--2 .on, .difficulty--1 .on { background: var(--success); }
+
+/* на жовтій плашці великої підказки — темний текст і світлі неактивні риски */
+.hint-flash__label .difficulty {
+  margin-left: var(--sp-2);
+  padding-left: var(--sp-2);
+  border-left: 1px solid rgba(0, 0, 0, 0.15);
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.hint-flash__label .difficulty__bars i:not(.on) {
+  background: rgba(0, 0, 0, 0.15);
 }
 
 @media (prefers-reduced-motion: reduce) {
