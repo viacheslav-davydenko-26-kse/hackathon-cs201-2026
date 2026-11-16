@@ -8,7 +8,78 @@
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-  <main id="app"></main>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><span class="logo__mark"><i data-icon="map-pin"></i></span>ДеЦе?<span class="logo__accent">Live</span></div>
+      <div class="topbar__right">
+        <span class="pill" id="round-label">Раунд 1</span>
+        <span class="score" title="Бали за сесію">
+          <i data-icon="trophy"></i>
+          <span id="score">0</span>
+        </span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="map-area">
+        <div class="map-wrap" id="map">
+          <p class="muted">Карта завантажується…</p>
+        </div>
+        <!-- легенда «гаряче/холодно»: відстань від твоєї відповіді до правильної -->
+        <ul class="legend" aria-label="Легенда відстаней">
+          <li class="legend__item"><span class="legend__swatch" style="background: var(--heat-hot)"></span>до 150 км</li>
+          <li class="legend__item"><span class="legend__swatch" style="background: var(--heat-warm)"></span>150–300 км</li>
+          <li class="legend__item"><span class="legend__swatch" style="background: var(--heat-cool)"></span>300–500 км</li>
+          <li class="legend__item"><span class="legend__swatch" style="background: var(--heat-cold)"></span>понад 500 км</li>
+        </ul>
+      </section>
+
+      <aside class="side">
+        <!-- результат раунду: solo.js показує після finished -->
+        <section class="panel result" id="result" hidden>
+          <div class="result__head">
+            <span class="result__icon" id="result-icon"></span>
+            <div>
+              <h2 class="result__title" id="result-title"></h2>
+              <p class="result__sub" id="result-text"></p>
+            </div>
+          </div>
+          <button class="btn btn--primary btn--block" id="next-round" type="button">
+            <i data-icon="rotate-ccw"></i>Ще раунд
+          </button>
+        </section>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title"><i data-icon="lightbulb"></i>Підказки</h2>
+            <span class="pill pill--accent" id="hints-count"></span>
+          </div>
+          <!-- solo.js заповнює список -->
+          <ol class="hints" id="hints"></ol>
+        </section>
+
+        <button class="btn btn--block" id="more-hint" type="button">
+          <i data-icon="lightbulb"></i>Ще підказка<span class="btn__hint" id="more-hint-mult"></span>
+        </button>
+
+        <section class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title"><i data-icon="target"></i>Спроби</h2>
+            <span class="dots" id="attempts-dots" title="Залишок спроб"></span>
+          </div>
+          <!-- solo.js показує результат кожної спроби -->
+          <ol class="attempts" id="attempts"></ol>
+          <p class="empty" id="attempts-empty"><i data-icon="map-pin"></i>Клікни на область на карті</p>
+        </section>
+
+        <p class="error" id="error" hidden></p>
+
+        <!-- картка області (card.js, Матвій) -->
+        <section class="panel" id="card" hidden></section>
+      </aside>
+    </main>
+  </div>
+
   <script type="module" src="/static/js/solo.js"></script>
 </body>
 </html>
