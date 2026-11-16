@@ -1232,6 +1232,7 @@
     },
     "/api/rooms": {
       "post": {
+        "description": "join_url/QR будуються від PUBLIC_URL (якщо задано), інакше від адреси, з якої відкрито host.html.",
         "operationId": "create_room_api_rooms_post",
         "responses": {
           "200": {

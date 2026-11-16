@@ -114,6 +114,12 @@ soloStart() ──► SoloRound{hints:[h0]} ──► [soloHint() ≤ 4 рази
 Фонового таймера нема: сервер перераховує статус при кожному запиті. Тому host **мусить** опитувати
 `state`, щоб кімната перейшла в `reveal`.
 
+### 5.1a Створення кімнати і посилання
+
+`join_url` = `<база>/static/play.html?room=<CODE>`. База — `PUBLIC_URL`, якщо його задано (URL тунелю),
+інакше адреса, з якої host.html викликав `POST /api/rooms`. Тобто якщо хост відкрив сторінку за LAN-IP
+або через тунель, QR одразу веде туди ж, і `PUBLIC_URL` можна не задавати.
+
 ### 5.2 Таймінг підказок
 
 Раунд триває `round_seconds` (35 за замовчуванням, у демо задається через `DEMO_ROUND_SECONDS`).
@@ -193,10 +199,10 @@ soloStart() ──► SoloRound{hints:[h0]} ──► [soloHint() ≤ 4 рази
 | Інтерфейс | Файл | Реалізація | Власник реалізації |
 |---|---|---|---|
 | `Repository` | `app/repository.py` | `SqliteRepository`, `CsvRepository`, `InMemoryRepository` | Слава (готово) |
-| `HintPicker.pick(region_id, n, rng) → Hint[]` | `app/game/hints.py` | `FactHintPicker` (`RandomHintPicker` тимчасовий) | Матвій |
+| `HintPicker.pick(region_id, n, rng) → Hint[]` | `app/game/hints.py` | `FactHintPicker` (`RandomHintPicker` тимчасовий) | Матвій (готово) |
 | `CardBuilder.build(region_id) → Card` | `app/game/card.py` | `DefaultCardBuilder` | Матвій |
-| `SoloService` | `app/game/solo.py` | `InMemorySoloService` | Слава |
-| `RoomManager` | `app/game/rooms.py` | `InMemoryRoomManager` | Слава |
+| `SoloService` | `app/game/solo.py` | `InMemorySoloService` | Слава (готово) |
+| `RoomManager` | `app/game/rooms.py` | `InMemoryRoomManager` | Слава (готово) |
 | `Step.run(ctx) → EtlTables` | `etl/base.py` | `AlertsStep`, `DratsStep`, `CarsStep`, `NmtStep` (`ParsedCsvStep` тимчасовий) | Ілля |
 | `FactGenerator.generate(...) → Fact[]` | `etl/build_facts.py` | `DefaultFactGenerator` | Матвій |
 | `Check.run(repo) → CheckResult` | `etl/check.py` | `NanMatrix` тощо | Ілля |

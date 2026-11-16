@@ -1,4 +1,6 @@
 """FastAPI-застосунок. Запуск: uvicorn app.main:app --host 0.0.0.0 --port 8000. Власник: Слава."""
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -9,6 +11,14 @@ from app.api import regions, rooms, solo
 from app.errors import GameError
 from app.game.scoring import HINT_MULT
 from app.schemas import AppConfig, ErrorResponse
+
+# uvicorn налаштовує лише власні логери — логам app.* потрібен свій обробник
+_app_log = logging.getLogger("app")
+if not _app_log.handlers:
+    _handler = logging.StreamHandler()
+    _handler.setFormatter(logging.Formatter("%(levelname)-9s %(name)s: %(message)s"))
+    _app_log.addHandler(_handler)
+    _app_log.setLevel(logging.INFO)
 
 ERROR_RESPONSES = {code: {"model": ErrorResponse} for code in (403, 404, 409, 422, 501, 503)}
 
