@@ -145,6 +145,11 @@ def test_alert_aggregates_match_unique_events(tables, raw_oblast_alerts, metric_
     catalog = {row["id"]: row for row in tables["metrics"]}
     assert metric_id in catalog, f"Missing required metric {metric_id}"
     year = int(catalog[metric_id]["year"])
+    # docs/contract.md §9 A1: aggregates cover only the shared comparison window.
+    windows = {(row["alerts_window_start"], row["alerts_window_end"])
+               for row in tables["coverage"] if row["alerts_window_start"]}
+    assert len(windows) == 1, f"Regions disagree on the alerts window: {windows}"
+    (window_start, window_end), = windows
     names = {row["name_uk"]: row["id"] for row in tables["regions"]}
     names["м.Київ"] = "kyiv_city"
     counts = Counter()
@@ -159,7 +164,10 @@ def test_alert_aggregates_match_unique_events(tables, raw_oblast_alerts, metric_
         seen.add(key)
         start = datetime.fromisoformat(row["started_at"])
         assert start.utcoffset() is not None, f"Alert lacks timezone: {key}"
+        local_day = start.astimezone(KYIV_TIME).date().isoformat()
         if start.astimezone(KYIV_TIME).year != year or not row["finished_at"]:
+            continue
+        if not window_start <= local_day <= window_end:
             continue
         assert row["oblast"] in names, f"Unknown raw region: {row['oblast']!r}"
         end = datetime.fromisoformat(row["finished_at"])
@@ -311,6 +319,8 @@ def test_coverage_matches_observations(tables):
     metadata_columns = {
         "alerts_max_date", "alerts_months_count",
         "alerts_missing_months", "alerts_complete_2025",
+        "alerts_window_start", "alerts_window_end",
+        "alerts_max_quiet_days", "alerts_max_quiet_from",
     }
     assert not metric_ids & metadata_columns, "Coverage metadata conflicts with metric IDs"
     assert set(coverage[0]) == metric_ids | {"region_id", "total"} | metadata_columns

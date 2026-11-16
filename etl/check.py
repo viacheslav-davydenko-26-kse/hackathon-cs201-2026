@@ -76,7 +76,32 @@ class SourceUrls(Check):
         return CheckResult(self.name, "error" if bad else "ok", bad)
 
 
-CHECKS: list[Check] = [MetricsCoverage(), FactsCoverage(), NanMatrix(), SourceUrls()]
+class AlertsCoverage(Check):
+    """docs/contract.md §9 A1–A6: спільне вікно тривог і підозрілі «тихі» паузи всередині нього."""
+    name = "покриття тривог (спільне вікно)"
+
+    def run(self, repo):
+        import csv
+
+        from app.config import PARSED_DIR
+        from etl.load_alerts import MAX_QUIET_DAYS
+        path = PARSED_DIR / "coverage.csv"
+        if not path.exists():
+            return CheckResult(self.name, "warn", [f"{path} not found"])
+        rows = [r for r in csv.DictReader(path.open(encoding="utf-8")) if r.get("alerts_window_start")]
+        windows = {(r["alerts_window_start"], r["alerts_window_end"]) for r in rows}
+        if len(windows) != 1:
+            return CheckResult(self.name, "error", [f"регіони мають різні вікна: {sorted(windows)}"])
+        (start, end), = windows
+        details = [f"вікно {start}..{end}; без даних: "
+                   + (", ".join(r.id for r in repo.playable_regions()
+                                if not repo.region_metrics(r.id, "alerts_count")) or "—")]
+        quiet = [f"{r['region_id']}: {r['alerts_max_quiet_days']} дн. без тривог з {r['alerts_max_quiet_from']}"
+                 for r in rows if int(r["alerts_max_quiet_days"] or 0) > MAX_QUIET_DAYS]
+        return CheckResult(self.name, "warn" if quiet else "ok", details + quiet)
+
+
+CHECKS: list[Check] = [MetricsCoverage(), FactsCoverage(), NanMatrix(), SourceUrls(), AlertsCoverage()]
 
 
 def main(repo: Repository | None = None) -> int:

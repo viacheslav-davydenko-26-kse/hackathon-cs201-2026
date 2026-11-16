@@ -108,7 +108,7 @@
         {
           "metric_id": "alerts_hours",
           "title_uk": "Сумарна тривалість тривог",
-          "unit": "годин за рік",
+          "unit": "годин за період 1 січня – 20 серпня 2025",
           "category": "war",
           "value": 322.5,
           "value_text": null,

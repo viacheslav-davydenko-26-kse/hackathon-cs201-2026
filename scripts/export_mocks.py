@@ -45,7 +45,7 @@ def mocks() -> dict[str, object]:
             CardMetric(metric_id="births_per_1000", title_uk="Народжуваність", unit="на 1000 мешканців",
                        category="demography", value=8.1, ukraine_avg=6.7, rank=4, n_ranked=25, higher_is="better",
                        year=2021, source_name="Держстат", source_url="https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4"),
-            CardMetric(metric_id="alerts_hours", title_uk="Сумарна тривалість тривог", unit="годин за рік",
+            CardMetric(metric_id="alerts_hours", title_uk="Сумарна тривалість тривог", unit="годин за період 1 січня – 20 серпня 2025",
                        category="war", value=322.5, ukraine_avg=812.4, rank=22, n_ranked=25, higher_is="worse",
                        year=2025, source_name="Повітряні тривоги (Vadimkin)",
                        source_url="https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset"),

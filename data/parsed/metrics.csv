@@ -1,11 +1,9 @@
 id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
-alerts_count,Кількість повітряних тривог,тривог за спостережуваний період 2025,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
-alerts_hours,Сумарна тривалість тривог,годин за спостережуваний період 2025,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_count,Кількість повітряних тривог,тривог за період 1 січня – 20 серпня 2025,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_hours,Сумарна тривалість тривог,годин за період 1 січня – 20 серпня 2025,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
 alerts_longest_hours,Найдовша тривога,годин,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
 alerts_night_share,Частка нічних тривог (00–06),%,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
 alerts_avg_minutes,Середня тривалість тривоги,хвилин,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
-alerts_per_month,Інтенсивність тривог на місяць,тривог / спост. місяць,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
-alerts_hours_per_month,Тривалість тривог на місяць,годин / спост. місяць,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
 births,Кількість живонароджених,осіб за рік,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,neutral
 births_per_1000,Народжуваність,на 1000 мешканців,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,better
 mother_age_avg,Середній вік матері при народженні дитини,років,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,neutral
