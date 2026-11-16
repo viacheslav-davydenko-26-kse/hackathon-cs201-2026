@@ -8,7 +8,44 @@
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-  <main id="app"></main>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo">ДеЦе?<span> Live</span></div>
+      <div class="stat">
+        <span class="stat__label">Бали</span>
+        <span class="stat__value" id="score">0</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <!-- карту рендерить map.js -->
+      <section class="map-area" id="map">
+        <p class="muted">Карта завантажується…</p>
+      </section>
+
+      <aside class="side">
+        <section class="panel">
+          <h2 class="panel__title">Підказки</h2>
+          <!-- solo.js заповнює список -->
+          <ol class="hints" id="hints">
+            <li class="hint"><span class="hint__num">1</span><span>Тут найпопулярніший колір нових авто — сірий</span></li>
+            <li class="hint hint--locked"><span class="hint__num">2</span><span>Ще не відкрита</span></li>
+          </ol>
+        </section>
+
+        <button class="btn btn--block" id="more-hint" type="button">Ще підказка (−20%)</button>
+
+        <section class="panel">
+          <h2 class="panel__title">Спроби</h2>
+          <!-- solo.js показує результат кожної спроби -->
+          <div id="attempts">
+            <p class="muted">Клікни на область на карті</p>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
   <script type="module" src="/static/js/solo.js"></script>
 </body>
 </html>
