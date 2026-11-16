@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pydantic
+pandas
+duckdb
+openpyxl
+segno
+pytest
+httpx
