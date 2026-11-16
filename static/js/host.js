@@ -12,13 +12,13 @@
 
 import {
   getConfig, getRegions, getGeo, roomCreate, roomStart, roomNext, pollRoom, ApiError, HEAT_COLORS,
-} from './api.js';
-import { createMap } from './map.js';
-import { renderCard } from './card.js';
-import { icon, hydrateIcons } from './icons.js';
+} from './api.js?v=2';
+import { createMap } from './map.js?v=2';
+import { renderCard } from './card.js?v=2';
+import { icon, hydrateIcons } from './icons.js?v=2';
 import {
   confetti, playSound, createSoundToggle, animateNumber, stagger, buttonBusy,
-} from './fx.js';
+} from './fx.js?v=2';
 
 /** @typedef {import('./types.js').RoomState} RoomState */
 /** @typedef {import('./types.js').RoomCreated} RoomCreated */
