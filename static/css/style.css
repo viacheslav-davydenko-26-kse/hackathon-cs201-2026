@@ -298,6 +298,68 @@ svg {
 .badge--cool { background: var(--heat-cool); color: var(--text); }
 .badge--cold { background: var(--heat-cold); }
 
+.hint__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+
+.hint__tag {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.hint--new {
+  animation: hint-in 300ms ease;
+}
+
+@keyframes hint-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* список спроб */
+.attempts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.attempt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.attempt__name {
+  font-weight: 600;
+}
+
+.attempt__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* результат раунду */
+.result {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  border-left: 6px solid var(--accent);
+}
+
+.result--win { border-left-color: var(--success); }
+.result--lose { border-left-color: var(--danger); }
+
+.result__title {
+  font-size: var(--fs-xl);
+  font-weight: 800;
+}
+
 .muted {
   color: var(--text-muted);
 }
