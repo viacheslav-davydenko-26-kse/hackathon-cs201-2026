@@ -6,9 +6,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ДеЦе? Live — Ведучий</title>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230057b8'/%3E%3Cpath d='M12 5a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z' fill='%23ffd34d'/%3E%3C/svg%3E">
 </head>
-<body>
-  <main id="app"></main>
+<body class="is-projector">
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><span class="logo__mark"><i data-icon="map-pin"></i></span>ДеЦе?<span class="logo__accent">Live</span></div>
+      <div class="topbar__right">
+        <span class="pill" id="round-no" hidden></span>
+        <span class="room-code" id="room-code" hidden></span>
+      </div>
+    </header>
+
+    <!-- host.js показує потрібні блоки за статусом кімнати: lobby | round | reveal | finished -->
+    <main class="layout">
+      <section class="map-area">
+        <!-- lobby: великий QR -->
+        <div class="qr-stage" id="qr-stage" hidden>
+          <h1 class="qr-stage__title">Скануйте і грайте разом!</h1>
+          <p class="qr-stage__sub">Вгадайте область України за відкритими даними</p>
+          <div class="qr" id="qr"></div>
+          <p class="join-url"><i data-icon="user"></i><span id="join-url"></span></p>
+        </div>
+        <!-- round / reveal / finished: карта -->
+        <div class="map-wrap" id="map" hidden></div>
+        <p class="muted" id="stage-loading">Створюємо кімнату…</p>
+      </section>
+
+      <aside class="side" id="side"></aside>
+    </main>
+  </div>
+
   <script type="module" src="/static/js/host.js"></script>
 </body>
 </html>
