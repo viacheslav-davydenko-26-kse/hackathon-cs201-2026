@@ -10,24 +10,39 @@ import {
 } from './api.js';
 import { createMap } from './map.js';
 import { renderCard } from './card.js';
+import { icon, hydrateIcons } from './icons.js';
 
 /** @typedef {import('./types.js').Hint} Hint */
 /** @typedef {import('./types.js').SoloGuessResponse} SoloGuessResponse */
 
-const HEAT_LABELS = { hot: 'Гаряче', warm: 'Тепло', cool: 'Прохолодно', cold: 'Холодно' };
-const CATEGORY_LABELS = { war: 'Війна', demography: 'Демографія', cars: 'Авто', education: 'Освіта' };
-const ANSWER_COLOR = '#1e8449';
+const HEAT = {
+  hot: { label: 'Гаряче', icon: 'flame' },
+  warm: { label: 'Тепло', icon: 'thermometer-sun' },
+  cool: { label: 'Прохолодно', icon: 'cloud-sun' },
+  cold: { label: 'Холодно', icon: 'snowflake' },
+};
+const CATEGORIES = {
+  war: { label: 'Війна', icon: 'siren' },
+  demography: { label: 'Демографія', icon: 'users' },
+  cars: { label: 'Авто', icon: 'car' },
+  education: { label: 'Освіта', icon: 'graduation-cap' },
+};
+const ANSWER_COLOR = '#12804a';
 
 const $ = (id) => document.getElementById(id);
 const ui = {
   score: $('score'),
+  roundLabel: $('round-label'),
   map: $('map'),
   hints: $('hints'),
+  hintsCount: $('hints-count'),
   moreHint: $('more-hint'),
+  moreHintMult: $('more-hint-mult'),
   attempts: $('attempts'),
   attemptsEmpty: $('attempts-empty'),
-  attemptsLeft: $('attempts-left'),
+  attemptsDots: $('attempts-dots'),
   result: $('result'),
+  resultIcon: $('result-icon'),
   resultTitle: $('result-title'),
   resultText: $('result-text'),
   nextRound: $('next-round'),
@@ -41,6 +56,7 @@ let config;
 let regionsById = new Map();
 let map;
 let sessionScore = 0;       // сума за всі завершені раунди
+let roundNo = 0;
 let busy = false;           // поки чекаємо відповідь сервера, нові кліки ігноруємо
 let cardView = null;
 
@@ -73,35 +89,34 @@ function pointsWord(n) {
   return 'балів';
 }
 
+/** Створює елемент: h('div', {class: 'x'}, 'текст', child) */
+function h(tag, attrs = {}, ...children) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  el.append(...children.filter((c) => c != null));
+  return el;
+}
+
 // ---------------------------------------------------------------- рендер
 function renderHints(newIndex = -1) {
   const items = [];
   for (let i = 0; i < round.totalHints; i++) {
     const hint = round.hints[i];
-    const li = document.createElement('li');
-    li.className = 'hint';
-    const num = document.createElement('span');
-    num.className = 'hint__num';
-    num.textContent = String(i + 1);
-    const body = document.createElement('span');
-    body.className = 'hint__body';
-
     if (hint) {
-      const text = document.createElement('span');
-      text.textContent = hint.text;
-      const tag = document.createElement('span');
-      tag.className = 'hint__tag';
-      tag.textContent = CATEGORY_LABELS[hint.category] ?? hint.category;
-      body.append(text, tag);
-      if (i === newIndex) li.classList.add('hint--new');
+      const cat = CATEGORIES[hint.category] ?? { label: hint.category, icon: 'lightbulb' };
+      items.push(h('li', { class: `hint${i === newIndex ? ' hint--new' : ''}` },
+        h('span', { class: 'hint__num' }, String(i + 1)),
+        h('span', { class: 'hint__body' },
+          h('span', {}, hint.text),
+          h('span', { class: 'hint__tag' }, icon(cat.icon), cat.label))));
     } else {
-      li.classList.add('hint--locked');
-      body.textContent = 'Ще не відкрита';
+      items.push(h('li', { class: 'hint hint--locked' },
+        h('span', { class: 'hint__num' }, icon('lock')),
+        h('span', {}, 'Ще не відкрита')));
     }
-    li.append(num, body);
-    items.push(li);
   }
   ui.hints.replaceChildren(...items);
+  ui.hintsCount.textContent = `${round.hints.length} / ${round.totalHints}`;
 }
 
 function renderMoreHintButton() {
@@ -111,37 +126,33 @@ function renderMoreHintButton() {
   if (!canOpen) return;
   // Множник балів після відкриття наступної підказки (HINT_MULT з /api/config).
   const nextMult = config.hint_mult[opened] ?? 0;
-  ui.moreHint.textContent = `Ще підказка (бали ×${nextMult})`;
+  ui.moreHintMult.textContent = `бали ×${nextMult}`;
 }
 
 function renderAttempts() {
   const items = round.attempts.map((a) => {
-    const li = document.createElement('li');
-    li.className = 'attempt';
-    const name = document.createElement('span');
-    name.className = 'attempt__name';
-    name.textContent = regionName(a.region_id);
-
-    const meta = document.createElement('span');
-    meta.className = 'attempt__meta';
-    const badge = document.createElement('span');
-    badge.className = `badge badge--${a.heat}`;
-    badge.textContent = a.correct ? 'Влучно!' : HEAT_LABELS[a.heat];
-    const dist = document.createElement('span');
-    dist.textContent = a.correct ? `+${a.points}` : `${Math.round(a.distance_km)} км · +${a.points}`;
-    meta.append(badge, dist);
-
-    li.append(name, meta);
-    return li;
+    const heat = HEAT[a.heat];
+    const iconCls = a.correct ? 'correct' : a.heat;
+    const meta = a.correct ? 'Влучно!' : `${heat.label} · ${Math.round(a.distance_km)} км`;
+    return h('li', { class: 'attempt' },
+      h('span', { class: `attempt__icon attempt__icon--${iconCls}` }, icon(a.correct ? 'circle-check' : heat.icon)),
+      h('span', { class: 'attempt__main' },
+        h('span', { class: 'attempt__name' }, regionName(a.region_id)),
+        h('span', { class: 'attempt__meta' }, meta)),
+      h('span', { class: 'attempt__points' }, `+${a.points}`));
   });
   ui.attempts.replaceChildren(...items);
   ui.attemptsEmpty.hidden = items.length > 0;
-  const left = round.maxAttempts - round.attempts.length;
-  ui.attemptsLeft.textContent = round.finished ? '' : `(лишилось ${left})`;
+
+  // Крапки: синя — спроба ще є, сіра — використана.
+  const used = round.attempts.length;
+  ui.attemptsDots.replaceChildren(...Array.from({ length: round.maxAttempts },
+    (_, i) => h('span', { class: `dot${i < used ? ' dot--used' : ''}` })));
 }
 
 function renderScore() {
   ui.score.textContent = String(sessionScore + round.points);
+  ui.roundLabel.textContent = `Раунд ${roundNo}`;
 }
 
 function renderResult() {
@@ -150,6 +161,7 @@ function renderResult() {
   const win = round.attempts.some((a) => a.correct);
   ui.result.classList.toggle('result--win', win);
   ui.result.classList.toggle('result--lose', !win);
+  ui.resultIcon.replaceChildren(icon(win ? 'circle-check' : 'circle-x', 'icon--lg'));
   ui.resultTitle.textContent = win ? 'Правильно!' : 'Не вгадали';
   const answer = regionsById.get(round.answerId)?.name_uk ?? round.answerId;
   ui.resultText.textContent = `Це ${answer}. За раунд: ${round.points} ${pointsWord(round.points)}.`;
@@ -164,7 +176,7 @@ function render() {
 }
 
 function showError(message) {
-  ui.error.textContent = message;
+  ui.error.replaceChildren(...(message ? [icon('circle-x'), message] : []));
   ui.error.hidden = !message;
 }
 
@@ -198,9 +210,13 @@ async function startRound() {
   map.reset();
   try {
     round = newRoundState(await soloStart());
+    roundNo += 1;
     map.setInteractive(true);
     render();
   } catch (e) {
+    round = null;
+    ui.moreHint.hidden = true;
+    map.setInteractive(false);
     showError('Не вдалося почати раунд. Спробуй оновити сторінку.');
     console.error(e);
   } finally {
@@ -209,7 +225,7 @@ async function startRound() {
 }
 
 async function openHint() {
-  if (busy || round.finished) return;
+  if (busy || !round || round.finished) return;
   busy = true;
   try {
     const { hints } = await soloHint(round.id);
@@ -225,7 +241,7 @@ async function openHint() {
 }
 
 async function guess(regionId) {
-  if (busy || round.finished) return;
+  if (busy || !round || round.finished) return;
   busy = true;
   showError('');
   try {
@@ -282,6 +298,7 @@ function handleRoundError(e) {
 
 // ---------------------------------------------------------------- старт
 async function init() {
+  hydrateIcons();
   const [cfg, regions, geo] = await Promise.all([getConfig(), getRegions(), getGeo()]);
   config = cfg;
   regionsById = new Map(regions.map((r) => [r.id, r]));

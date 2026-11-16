@@ -10,13 +10,10 @@
 <body class="is-projector">
   <div class="app">
     <header class="topbar">
-      <div class="logo">ДеЦе?<span> Live</span></div>
+      <div class="logo"><span class="logo__mark"><i data-icon="map-pin"></i></span>ДеЦе?<span class="logo__accent">Live</span></div>
       <div class="topbar__right">
+        <span class="pill" id="round-no" hidden></span>
         <span class="room-code" id="room-code" hidden></span>
-        <div class="stat">
-          <span class="stat__label">Раунд</span>
-          <span class="stat__value" id="round-no">—</span>
-        </div>
       </div>
     </header>
 
@@ -26,11 +23,12 @@
         <!-- lobby: великий QR -->
         <div class="qr-stage" id="qr-stage" hidden>
           <h1 class="qr-stage__title">Скануйте і грайте разом!</h1>
+          <p class="qr-stage__sub">Вгадайте область України за відкритими даними</p>
           <div class="qr" id="qr"></div>
-          <p class="join-url" id="join-url"></p>
+          <p class="join-url"><i data-icon="user"></i><span id="join-url"></span></p>
         </div>
         <!-- round / reveal / finished: карта -->
-        <div class="map-host" id="map" hidden></div>
+        <div class="map-wrap" id="map" hidden></div>
         <p class="muted" id="stage-loading">Створюємо кімнату…</p>
       </section>
 
