@@ -1,0 +1,31 @@
+id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
+alerts_count,Кількість повітряних тривог,тривог за рік,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_hours,Сумарна тривалість тривог,годин за рік,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_longest_hours,Найдовша тривога,годин,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_night_share,Частка нічних тривог (00–06),%,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_avg_minutes,Середня тривалість тривоги,хвилин,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+births,Кількість живонароджених,осіб за рік,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,neutral
+births_per_1000,Народжуваність,на 1000 мешканців,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,better
+mother_age_avg,Середній вік матері при народженні дитини,років,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,neutral
+deaths_per_birth,Померлих на одного народженого,осіб,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,worse
+marriages,Кількість зареєстрованих шлюбів,за рік,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,neutral
+divorces,Кількість розірвань шлюбів,за рік,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,neutral
+marriages_per_1000,Шлюбність,на 1000 мешканців,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,neutral
+divorces_per_1000,Розлучуваність,на 1000 мешканців,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,worse
+divorces_per_100_marriages,Розлучень на 100 шлюбів,на 100 шлюбів,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,worse
+deaths,Кількість померлих,осіб за рік,numeric,demography,Держстат: Смертність (SDMX DF_POPULATION_MORTALITY),https://data.gov.ua/dataset/93984cf9-6ec4-4846-9bc8-2a25075abdad,2021,neutral
+deaths_per_1000,Смертність,на 1000 мешканців,numeric,demography,Держстат: Смертність (SDMX DF_POPULATION_MORTALITY),https://data.gov.ua/dataset/93984cf9-6ec4-4846-9bc8-2a25075abdad,2021,worse
+population,Чисельність наявного населення на 1 січня,осіб,numeric,demography,Держстат: Чисельність та склад населення (SDMX DF_POPULATION_STRUCTURE),https://data.gov.ua/dataset/7b2cffb7-28f9-488b-85c6-fe364a42adde,2022,neutral
+age_avg,Середній вік населення на 1 січня,років,numeric,demography,Держстат: Чисельність та склад населення (SDMX DF_POPULATION_STRUCTURE),https://data.gov.ua/dataset/7b2cffb7-28f9-488b-85c6-fe364a42adde,2022,neutral
+nmt_participants,Кількість учасників НМТ,осіб,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral
+nmt_avg_ukr,Середній бал НМТ: українська мова,балів (100–200),numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_180_ukr,Частка 180+ балів: українська мова,% зарахованих,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_avg_math,Середній бал НМТ: математика,балів (100–200),numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_180_math,Частка 180+ балів: математика,% зарахованих,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_avg_hist,Середній бал НМТ: історія України,балів (100–200),numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_180_hist,Частка 180+ балів: історія України,% зарахованих,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_any_180_share,Частка учасників з 180+ хоча б з одного предмета,%,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_eng_share,"Частка учасників, що обрали англійську",%,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral
+nmt_top_elective,Найпопулярніший предмет на вибір,,categorical,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral
+nmt_top_elective_non_eng,"Найпопулярніший предмет на вибір, крім англійської",,categorical,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral
+nmt_participants_per_1000,Учасників НМТ,на 1000 мешканців (населення на 01.01.2022),numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral

@@ -1,0 +1,5 @@
+id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
+births,Кількість живонароджених,осіб за рік,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,neutral
+births_per_1000,Народжуваність,на 1000 мешканців,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,better
+mother_age_avg,Середній вік матері при народженні дитини,років,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,neutral
+deaths_per_birth,Померлих на одного народженого,осіб,numeric,demography,Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH),https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4,2021,worse

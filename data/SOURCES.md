@@ -1,0 +1,11 @@
+# Джерела даних
+
+| Набір | Файл | URL | Сторінка | Завантажено |
+|---|---|---|---|---|
+| geoBoundaries UKR ADM1 (simplified) | `geo/ukr_adm1_simplified.geojson` | https://github.com/wmgeolab/geoBoundaries/raw/9469f09/releaseData/gbOpen/UKR/ADM1/geoBoundaries-UKR-ADM1_simplified.geojson | https://www.geoboundaries.org/api/current/gbOpen/UKR/ADM1/ | 2026-11-15 |
+| УЦОЯО: Відкриті дані НМТ | `nmt/OpenDataNMT2025.7z` | https://zno.testportal.com.ua/yearstat/uploads/OpenDataNMT2025.7z | https://zno.testportal.com.ua/opendata | 2026-11-15 |
+| Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset) | `alerts/official_data_uk.csv` | https://raw.githubusercontent.com/Vadimkin/ukrainian-air-raid-sirens-dataset/main/datasets/official_data_uk.csv | https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset | 2026-11-15 |
+| Держстат: Народжуваність (SDMX DF_POPULATION_BIRTH) | `drats/sssu_birth.json.gz` | https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4/resource/540b34ee-c9ac-47c8-9a9f-6373ef611cab/download/dataset_default_integration_sssu_df_population_birth_latest.json | https://data.gov.ua/dataset/8ce892f8-a4c4-4c17-bdcf-b0537e2d2de4 | 2026-11-15 |
+| Держстат: Смертність (SDMX DF_POPULATION_MORTALITY) | `drats/sssu_mortality.json.gz` | https://data.gov.ua/dataset/93984cf9-6ec4-4846-9bc8-2a25075abdad/resource/10a3dcdd-e97f-478e-860e-8ed8beff9557/download/dataset_default_integration_sssu_df_population_mortality_latest.json | https://data.gov.ua/dataset/93984cf9-6ec4-4846-9bc8-2a25075abdad | 2026-11-15 |
+| Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE) | `drats/sssu_marriage_divorce.json.gz` | https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975/resource/701caac5-36f1-45e2-aea4-dbf7cadd64e5/download/dataset_default_integration_sssu_df_population_marriage_divorce_latest.json | https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975 | 2026-11-15 |
+| Держстат: Чисельність та склад населення (SDMX DF_POPULATION_STRUCTURE) | `population/sssu_population_structure.json.gz` | https://data.gov.ua/dataset/7b2cffb7-28f9-488b-85c6-fe364a42adde/resource/580e6a08-69ec-43e1-8bea-f48c4a13f1f5/download/dataset_default_integration_sssu_df_population_structure_latest.json | https://data.gov.ua/dataset/7b2cffb7-28f9-488b-85c6-fe364a42adde | 2026-11-15 |

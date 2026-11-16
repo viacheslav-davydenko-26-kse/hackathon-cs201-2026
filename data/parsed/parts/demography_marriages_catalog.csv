@@ -1,0 +1,6 @@
+id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
+marriages,Кількість зареєстрованих шлюбів,за рік,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,neutral
+divorces,Кількість розірвань шлюбів,за рік,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,neutral
+marriages_per_1000,Шлюбність,на 1000 мешканців,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,neutral
+divorces_per_1000,Розлучуваність,на 1000 мешканців,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,worse
+divorces_per_100_marriages,Розлучень на 100 шлюбів,на 100 шлюбів,numeric,demography,Держстат: Шлюбність і розлучуваність (SDMX DF_POPULATION_MARRIAGE_DIVORCE),https://data.gov.ua/dataset/4f458054-6c66-468e-b47c-414ae1e98975,2021,worse

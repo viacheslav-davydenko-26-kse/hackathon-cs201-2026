@@ -1,0 +1,3 @@
+id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
+deaths,Кількість померлих,осіб за рік,numeric,demography,Держстат: Смертність (SDMX DF_POPULATION_MORTALITY),https://data.gov.ua/dataset/93984cf9-6ec4-4846-9bc8-2a25075abdad,2021,neutral
+deaths_per_1000,Смертність,на 1000 мешканців,numeric,demography,Держстат: Смертність (SDMX DF_POPULATION_MORTALITY),https://data.gov.ua/dataset/93984cf9-6ec4-4846-9bc8-2a25075abdad,2021,worse

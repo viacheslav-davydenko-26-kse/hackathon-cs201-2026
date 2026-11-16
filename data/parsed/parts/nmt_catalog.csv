@@ -1,0 +1,12 @@
+id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
+nmt_participants,Кількість учасників НМТ,осіб,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral
+nmt_avg_ukr,Середній бал НМТ: українська мова,балів (100–200),numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_180_ukr,Частка 180+ балів: українська мова,% зарахованих,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_avg_math,Середній бал НМТ: математика,балів (100–200),numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_180_math,Частка 180+ балів: математика,% зарахованих,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_avg_hist,Середній бал НМТ: історія України,балів (100–200),numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_180_hist,Частка 180+ балів: історія України,% зарахованих,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_any_180_share,Частка учасників з 180+ хоча б з одного предмета,%,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,better
+nmt_eng_share,"Частка учасників, що обрали англійську",%,numeric,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral
+nmt_top_elective,Найпопулярніший предмет на вибір,,categorical,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral
+nmt_top_elective_non_eng,"Найпопулярніший предмет на вибір, крім англійської",,categorical,education,УЦОЯО: Відкриті дані НМТ,https://zno.testportal.com.ua/opendata,2025,neutral

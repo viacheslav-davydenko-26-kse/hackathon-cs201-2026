@@ -1,0 +1,6 @@
+id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
+alerts_count,Кількість повітряних тривог,тривог за рік,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_hours,Сумарна тривалість тривог,годин за рік,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_longest_hours,Найдовша тривога,годин,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_night_share,Частка нічних тривог (00–06),%,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse
+alerts_avg_minutes,Середня тривалість тривоги,хвилин,numeric,war,Повітряні тривоги (Vadimkin/ukrainian-air-raid-sirens-dataset),https://github.com/Vadimkin/ukrainian-air-raid-sirens-dataset,2025,worse

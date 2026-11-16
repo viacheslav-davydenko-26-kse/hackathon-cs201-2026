@@ -1,0 +1,3 @@
+id,title_uk,unit,kind,category,source_name,source_url,year,higher_is
+population,Чисельність наявного населення на 1 січня,осіб,numeric,demography,Держстат: Чисельність та склад населення (SDMX DF_POPULATION_STRUCTURE),https://data.gov.ua/dataset/7b2cffb7-28f9-488b-85c6-fe364a42adde,2022,neutral
+age_avg,Середній вік населення на 1 січня,років,numeric,demography,Держстат: Чисельність та склад населення (SDMX DF_POPULATION_STRUCTURE),https://data.gov.ua/dataset/7b2cffb7-28f9-488b-85c6-fe364a42adde,2022,neutral
