@@ -1,0 +1,6 @@
+{
+  "error": {
+    "code": "room_not_found",
+    "message": "unknown room 'ZZZZ'"
+  }
+}

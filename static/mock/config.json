@@ -1,0 +1,13 @@
+{
+  "round_seconds": 35,
+  "total_hints": 5,
+  "hint_mult": [
+    1.0,
+    0.8,
+    0.6,
+    0.45,
+    0.3
+  ],
+  "solo_max_attempts": 3,
+  "public_url": "http://localhost:8000"
+}

@@ -1,6 +1,10 @@
 """Тривоги (level == 'oblast') -> region_metrics + series + coverage.
 
 Власник: Ілля.
+
+Два входи до одних і тих самих функцій:
+  * `python -m etl.load_alerts` — перезаписує data/parsed/*.csv (alerts_*-рядки);
+  * `AlertsStep` — крок для `python -m etl.run_all --source raw` (нічого не пише, повертає EtlTables).
 """
 
 from __future__ import annotations
@@ -10,6 +14,10 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+from app.domain import EtlTables
+from app.repository import metric_from_row, region_metric_from_row, series_from_row
+from etl.base import EtlContext, Step
 
 KYIV_TZ = ZoneInfo("Europe/Kyiv")
 
@@ -395,6 +403,26 @@ def rebuild_parsed_outputs(
         updated_cov.append(new_row)
 
     _write_csv(cov_path, new_fields, updated_cov)
+
+
+class AlertsStep(Step):
+    """Крок ETL поверх тих самих функцій; rank/n_ranked перераховує run_all."""
+
+    name = "alerts"
+
+    def __init__(self, year: int = 2025):
+        self.year = year
+
+    def run(self, ctx: EtlContext) -> EtlTables:
+        region_map = load_region_map(ctx.parsed_dir / "regions.csv")
+        alerts_by_region, _ = parse_deduplicated_alerts(ctx.data_dir / "alerts" / "official_data_uk.csv",
+                                                        region_map, year=self.year)
+        metrics_rows, series_rows, _ = compute_alerts_data(alerts_by_region, year=self.year)
+        return EtlTables(
+            metrics=[metric_from_row(r) for r in build_alerts_catalog(year=self.year)],
+            region_metrics=[region_metric_from_row(r) for r in metrics_rows],
+            series=[series_from_row(r) for r in series_rows],
+        )
 
 
 def main() -> None:

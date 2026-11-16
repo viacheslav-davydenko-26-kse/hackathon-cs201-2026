@@ -1,0 +1,2059 @@
+{
+  "components": {
+    "schemas": {
+      "AppConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "hint_mult": {
+            "description": "Множник балів за індексом останньої відкритої підказки",
+            "items": {
+              "type": "number"
+            },
+            "title": "Hint Mult",
+            "type": "array"
+          },
+          "public_url": {
+            "description": "База для посилань/QR, напр. URL тунелю",
+            "title": "Public Url",
+            "type": "string"
+          },
+          "round_seconds": {
+            "description": "Тривалість раунду в кімнаті",
+            "title": "Round Seconds",
+            "type": "integer"
+          },
+          "solo_max_attempts": {
+            "default": 3,
+            "title": "Solo Max Attempts",
+            "type": "integer"
+          },
+          "total_hints": {
+            "default": 5,
+            "description": "Скільки підказок у раунді",
+            "title": "Total Hints",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "round_seconds",
+          "hint_mult",
+          "public_url"
+        ],
+        "title": "AppConfig",
+        "type": "object"
+      },
+      "Card": {
+        "additionalProperties": false,
+        "properties": {
+          "highlights": {
+            "description": "2–4 короткі речення-висновки",
+            "items": {
+              "type": "string"
+            },
+            "title": "Highlights",
+            "type": "array"
+          },
+          "metrics": {
+            "description": "Відсортовані за важливістю; фронт показує перші 4 як бари",
+            "items": {
+              "$ref": "#/components/schemas/CardMetric"
+            },
+            "title": "Metrics",
+            "type": "array"
+          },
+          "region": {
+            "$ref": "#/components/schemas/CardRegion"
+          },
+          "series": {
+            "additionalProperties": {
+              "items": {
+                "$ref": "#/components/schemas/SeriesPoint"
+              },
+              "type": "array"
+            },
+            "description": "metric_id → точки за зростанням period",
+            "title": "Series",
+            "type": "object"
+          }
+        },
+        "required": [
+          "region",
+          "metrics",
+          "highlights",
+          "series"
+        ],
+        "title": "Card",
+        "type": "object"
+      },
+      "CardMetric": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "enum": [
+              "war",
+              "demography",
+              "cars",
+              "education"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "higher_is": {
+            "default": "neutral",
+            "enum": [
+              "better",
+              "worse",
+              "neutral"
+            ],
+            "title": "Higher Is",
+            "type": "string"
+          },
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "n_ranked": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N Ranked"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "1 = найбільше значення",
+            "title": "Rank"
+          },
+          "source_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Name"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "title_uk": {
+            "title": "Title Uk",
+            "type": "string"
+          },
+          "ukraine_avg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Середнє серед регіонів з даними; null для categorical",
+            "title": "Ukraine Avg"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null для categorical",
+            "title": "Value"
+          },
+          "value_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Лише для categorical",
+            "title": "Value Text"
+          },
+          "year": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        "required": [
+          "metric_id",
+          "title_uk",
+          "unit",
+          "category",
+          "value",
+          "ukraine_avg",
+          "rank",
+          "n_ranked",
+          "source_name",
+          "source_url"
+        ],
+        "title": "CardMetric",
+        "type": "object"
+      },
+      "CardRegion": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name_uk": {
+            "title": "Name Uk",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name_uk"
+        ],
+        "title": "CardRegion",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "description": "Машинний код, див. docs/contract.md → «Помилки»",
+            "examples": [
+              "room_not_found"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "description": "Текст для логів/дебагу, не для гравця",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "type": "object"
+      },
+      "GuessRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "region_id": {
+            "title": "Region Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "region_id"
+        ],
+        "title": "GuessRequest",
+        "type": "object"
+      },
+      "Hint": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "enum": [
+              "war",
+              "demography",
+              "cars",
+              "education"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "index": {
+            "description": "0 = найважча (відкривається першою)",
+            "maximum": 4.0,
+            "minimum": 0.0,
+            "title": "Index",
+            "type": "integer"
+          },
+          "metric_id": {
+            "title": "Metric Id",
+            "type": "string"
+          },
+          "text": {
+            "examples": [
+              "Тут найпопулярніший предмет на вибір — історія України"
+            ],
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "text",
+          "metric_id",
+          "category"
+        ],
+        "title": "Hint",
+        "type": "object"
+      },
+      "HintsResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "hints": {
+            "description": "УСІ відкриті підказки (не лише нова)",
+            "items": {
+              "$ref": "#/components/schemas/Hint"
+            },
+            "title": "Hints",
+            "type": "array"
+          }
+        },
+        "required": [
+          "hints"
+        ],
+        "title": "HintsResponse",
+        "type": "object"
+      },
+      "HostAction": {
+        "additionalProperties": false,
+        "properties": {
+          "host_key": {
+            "title": "Host Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "host_key"
+        ],
+        "title": "HostAction",
+        "type": "object"
+      },
+      "JoinRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "JoinRequest",
+        "type": "object"
+      },
+      "JoinResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "player_id": {
+            "title": "Player Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "player_id"
+        ],
+        "title": "JoinResponse",
+        "type": "object"
+      },
+      "LeaderboardRow": {
+        "additionalProperties": false,
+        "properties": {
+          "delta": {
+            "default": 0,
+            "description": "Скільки додано в останньому раунді",
+            "title": "Delta",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "player_id": {
+            "title": "Player Id",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "player_id",
+          "name",
+          "score"
+        ],
+        "title": "LeaderboardRow",
+        "type": "object"
+      },
+      "Player": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "score"
+        ],
+        "title": "Player",
+        "type": "object"
+      },
+      "Region": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "examples": [
+              "lviv"
+            ],
+            "title": "Id",
+            "type": "string"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "name_uk": {
+            "examples": [
+              "Львівська область"
+            ],
+            "title": "Name Uk",
+            "type": "string"
+          },
+          "playable": {
+            "description": "false → сіра область, клік ігнорується",
+            "title": "Playable",
+            "type": "boolean"
+          },
+          "short_uk": {
+            "examples": [
+              "Львівщина"
+            ],
+            "title": "Short Uk",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name_uk",
+          "short_uk",
+          "playable",
+          "lat",
+          "lon"
+        ],
+        "title": "Region",
+        "type": "object"
+      },
+      "Reveal": {
+        "additionalProperties": false,
+        "properties": {
+          "answer_region_id": {
+            "title": "Answer Region Id",
+            "type": "string"
+          },
+          "card": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Card"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null, якщо картка ще не реалізована/впала"
+          },
+          "distribution": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "region_id → кількість відповідей",
+            "title": "Distribution",
+            "type": "object"
+          },
+          "guesses": {
+            "description": "Лише ті, хто відповів",
+            "items": {
+              "$ref": "#/components/schemas/RevealGuess"
+            },
+            "title": "Guesses",
+            "type": "array"
+          }
+        },
+        "required": [
+          "answer_region_id",
+          "guesses",
+          "distribution",
+          "card"
+        ],
+        "title": "Reveal",
+        "type": "object"
+      },
+      "RevealGuess": {
+        "additionalProperties": false,
+        "properties": {
+          "distance_km": {
+            "title": "Distance Km",
+            "type": "number"
+          },
+          "heat": {
+            "enum": [
+              "hot",
+              "warm",
+              "cool",
+              "cold"
+            ],
+            "title": "Heat",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "player_id": {
+            "title": "Player Id",
+            "type": "string"
+          },
+          "points": {
+            "description": "За раунд, разом із бонусом швидкості",
+            "title": "Points",
+            "type": "integer"
+          },
+          "region_id": {
+            "title": "Region Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "player_id",
+          "name",
+          "region_id",
+          "distance_km",
+          "heat",
+          "points"
+        ],
+        "title": "RevealGuess",
+        "type": "object"
+      },
+      "RoomCreated": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "examples": [
+              "K7QF"
+            ],
+            "pattern": "^[A-Z0-9]{4}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "host_key": {
+            "description": "Секрет хоста; тримати лише в host.html",
+            "title": "Host Key",
+            "type": "string"
+          },
+          "join_url": {
+            "examples": [
+              "https://xxx.trycloudflare.com/static/play.html?room=K7QF"
+            ],
+            "title": "Join Url",
+            "type": "string"
+          },
+          "qr_svg": {
+            "description": "Готовий <svg>…</svg> для вставки через innerHTML",
+            "title": "Qr Svg",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "host_key",
+          "join_url",
+          "qr_svg"
+        ],
+        "title": "RoomCreated",
+        "type": "object"
+      },
+      "RoomGuessRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "player_id": {
+            "title": "Player Id",
+            "type": "string"
+          },
+          "region_id": {
+            "title": "Region Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "player_id",
+          "region_id"
+        ],
+        "title": "RoomGuessRequest",
+        "type": "object"
+      },
+      "RoomGuessResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "region_id": {
+            "title": "Region Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "region_id"
+        ],
+        "title": "RoomGuessResponse",
+        "type": "object"
+      },
+      "RoomState": {
+        "additionalProperties": false,
+        "properties": {
+          "answered": {
+            "title": "Answered",
+            "type": "integer"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Дедлайн поточного раунду; null у lobby/finished",
+            "title": "Ends At"
+          },
+          "hints": {
+            "description": "Відкриті на зараз; у reveal — усі 5",
+            "items": {
+              "$ref": "#/components/schemas/Hint"
+            },
+            "title": "Hints",
+            "type": "array"
+          },
+          "leaderboard": {
+            "description": "Відсортований за score спадно",
+            "items": {
+              "$ref": "#/components/schemas/LeaderboardRow"
+            },
+            "title": "Leaderboard",
+            "type": "array"
+          },
+          "me": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Player"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Якщо передано відомий player_id"
+          },
+          "my_guess": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "region_id відповіді гравця в поточному раунді",
+            "title": "My Guess"
+          },
+          "next_hint_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Коли відкриється наступна підказка; null, якщо всі відкриті або не round",
+            "title": "Next Hint At"
+          },
+          "players": {
+            "description": "У порядку приєднання",
+            "items": {
+              "$ref": "#/components/schemas/Player"
+            },
+            "title": "Players",
+            "type": "array"
+          },
+          "reveal": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Reveal"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Лише в статусах reveal/finished"
+          },
+          "round_no": {
+            "description": "1-based; 0 у lobby",
+            "title": "Round No",
+            "type": "integer"
+          },
+          "server_now": {
+            "description": "Час сервера; фронт рахує таймер як ends_at - server_now",
+            "title": "Server Now",
+            "type": "number"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Старт поточного раунду; null у lobby",
+            "title": "Started At"
+          },
+          "status": {
+            "enum": [
+              "lobby",
+              "round",
+              "reveal",
+              "finished"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "total_rounds": {
+            "title": "Total Rounds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "status",
+          "server_now",
+          "players",
+          "round_no",
+          "total_rounds",
+          "started_at",
+          "ends_at",
+          "next_hint_at",
+          "hints",
+          "answered",
+          "total",
+          "leaderboard"
+        ],
+        "title": "RoomState",
+        "type": "object"
+      },
+      "SeriesPoint": {
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "examples": [
+              "2025-03"
+            ],
+            "title": "Period",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value",
+            "type": "number"
+          }
+        },
+        "required": [
+          "period",
+          "value"
+        ],
+        "title": "SeriesPoint",
+        "type": "object"
+      },
+      "SoloGuessResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "answer_region_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "null, поки раунд не finished",
+            "title": "Answer Region Id"
+          },
+          "attempt": {
+            "description": "Номер цієї спроби, 1-based",
+            "minimum": 1.0,
+            "title": "Attempt",
+            "type": "integer"
+          },
+          "attempts_left": {
+            "minimum": 0.0,
+            "title": "Attempts Left",
+            "type": "integer"
+          },
+          "correct": {
+            "title": "Correct",
+            "type": "boolean"
+          },
+          "distance_km": {
+            "description": "Між центроїдами; 0 якщо correct",
+            "minimum": 0.0,
+            "title": "Distance Km",
+            "type": "number"
+          },
+          "finished": {
+            "description": "true → раунд закрито (вгадано або спроби вичерпано)",
+            "title": "Finished",
+            "type": "boolean"
+          },
+          "heat": {
+            "enum": [
+              "hot",
+              "warm",
+              "cool",
+              "cold"
+            ],
+            "title": "Heat",
+            "type": "string"
+          },
+          "points": {
+            "description": "Бали за ЦЮ спробу",
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "integer"
+          },
+          "total_points": {
+            "description": "Сума за раунд",
+            "minimum": 0.0,
+            "title": "Total Points",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "correct",
+          "attempt",
+          "attempts_left",
+          "finished",
+          "distance_km",
+          "heat",
+          "points",
+          "total_points",
+          "answer_region_id"
+        ],
+        "title": "SoloGuessResponse",
+        "type": "object"
+      },
+      "SoloRound": {
+        "additionalProperties": false,
+        "properties": {
+          "hints": {
+            "description": "Відкриті на зараз підказки; на старті рівно 1",
+            "items": {
+              "$ref": "#/components/schemas/Hint"
+            },
+            "title": "Hints",
+            "type": "array"
+          },
+          "max_attempts": {
+            "default": 3,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "round_id": {
+            "title": "Round Id",
+            "type": "string"
+          },
+          "total_hints": {
+            "default": 5,
+            "title": "Total Hints",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "round_id",
+          "hints"
+        ],
+        "title": "SoloRound",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "title": "ДеЦе? Live",
+    "version": "0.1.0"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/config": {
+      "get": {
+        "operationId": "get_config_api_config_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppConfig"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Get Config",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/regions": {
+      "get": {
+        "operationId": "list_regions_api_regions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Region"
+                  },
+                  "title": "Response List Regions Api Regions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "List Regions",
+        "tags": [
+          "regions"
+        ]
+      }
+    },
+    "/api/regions/{region_id}/card": {
+      "get": {
+        "operationId": "region_card_api_regions__region_id__card_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "region_id",
+            "required": true,
+            "schema": {
+              "title": "Region Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Card"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Region Card",
+        "tags": [
+          "regions"
+        ]
+      }
+    },
+    "/api/rooms": {
+      "post": {
+        "operationId": "create_room_api_rooms_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomCreated"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Create Room",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/rooms/{code}/guess": {
+      "post": {
+        "operationId": "guess_api_rooms__code__guess_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RoomGuessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomGuessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Guess",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/rooms/{code}/next": {
+      "post": {
+        "operationId": "next_round_api_rooms__code__next_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HostAction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Next Round",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/rooms/{code}/players": {
+      "post": {
+        "operationId": "join_api_rooms__code__players_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JoinResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Join",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/rooms/{code}/start": {
+      "post": {
+        "operationId": "start_api_rooms__code__start_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HostAction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Start",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/rooms/{code}/state": {
+      "get": {
+        "operationId": "state_api_rooms__code__state_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "required": true,
+            "schema": {
+              "title": "Code",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "player_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Player Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "State",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/solo/rounds": {
+      "post": {
+        "operationId": "create_round_api_solo_rounds_post",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoloRound"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Create Round",
+        "tags": [
+          "solo"
+        ]
+      }
+    },
+    "/api/solo/rounds/{round_id}/guess": {
+      "post": {
+        "operationId": "guess_api_solo_rounds__round_id__guess_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "round_id",
+            "required": true,
+            "schema": {
+              "title": "Round Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GuessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SoloGuessResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Guess",
+        "tags": [
+          "solo"
+        ]
+      }
+    },
+    "/api/solo/rounds/{round_id}/hint": {
+      "post": {
+        "operationId": "next_hint_api_solo_rounds__round_id__hint_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "round_id",
+            "required": true,
+            "schema": {
+              "title": "Round Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HintsResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Next Hint",
+        "tags": [
+          "solo"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Not Implemented"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "meta"
+        ]
+      }
+    }
+  }
+}

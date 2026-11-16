@@ -1,39 +1,40 @@
-"""/api/rooms (REST + polling). Власник: Слава."""
-from fastapi import APIRouter, HTTPException
+"""/api/rooms (REST + polling раз на 1 с). Власник: Слава."""
+from fastapi import APIRouter, Depends
 
+from app.deps import get_rooms
+from app.game.rooms import RoomManager
 from app.schemas import (
-    HostAction, JoinRequest, JoinResponse, RoomCreated, RoomGuessRequest,
-    RoomGuessResponse, RoomState,
+    HostAction, JoinRequest, JoinResponse, RoomCreated, RoomGuessRequest, RoomGuessResponse, RoomState,
 )
 
 router = APIRouter(prefix="/api/rooms", tags=["rooms"])
 
 
 @router.post("", response_model=RoomCreated)
-def create_room():
-    raise HTTPException(501, "not implemented")
+def create_room(rooms: RoomManager = Depends(get_rooms)):
+    return rooms.create_room()
 
 
-@router.post("/{code}/players", response_model=JoinResponse)
-def join(code: str, body: JoinRequest):
-    raise HTTPException(501, "not implemented")
+@router.post("/{code}/players", response_model=JoinResponse, responses={404: {}, 409: {}, 422: {}})
+def join(code: str, body: JoinRequest, rooms: RoomManager = Depends(get_rooms)):
+    return rooms.join(code.upper(), body.name)
 
 
-@router.post("/{code}/start", response_model=RoomState)
-def start(code: str, body: HostAction):
-    raise HTTPException(501, "not implemented")
+@router.post("/{code}/start", response_model=RoomState, responses={403: {}, 404: {}, 409: {}})
+def start(code: str, body: HostAction, rooms: RoomManager = Depends(get_rooms)):
+    return rooms.start(code.upper(), body.host_key)
 
 
-@router.post("/{code}/next", response_model=RoomState)
-def next_round(code: str, body: HostAction):
-    raise HTTPException(501, "not implemented")
+@router.post("/{code}/next", response_model=RoomState, responses={403: {}, 404: {}, 409: {}})
+def next_round(code: str, body: HostAction, rooms: RoomManager = Depends(get_rooms)):
+    return rooms.next(code.upper(), body.host_key)
 
 
-@router.post("/{code}/guess", response_model=RoomGuessResponse)
-def guess(code: str, body: RoomGuessRequest):
-    raise HTTPException(501, "not implemented")
+@router.post("/{code}/guess", response_model=RoomGuessResponse, responses={404: {}, 409: {}, 422: {}})
+def guess(code: str, body: RoomGuessRequest, rooms: RoomManager = Depends(get_rooms)):
+    return rooms.guess(code.upper(), body.player_id, body.region_id)
 
 
-@router.get("/{code}/state", response_model=RoomState)
-def state(code: str, player_id: str | None = None):
-    raise HTTPException(501, "not implemented")
+@router.get("/{code}/state", response_model=RoomState, responses={404: {}})
+def state(code: str, player_id: str | None = None, rooms: RoomManager = Depends(get_rooms)):
+    return rooms.state(code.upper(), player_id)
