@@ -686,6 +686,7 @@ svg {
   align-items: center;
   gap: var(--sp-4);
   text-align: center;
+  width: 100%;
   height: 100%;
   justify-content: center;
 }
@@ -956,6 +957,176 @@ svg {
   15% { transform: scale(1.02); }
   30% { transform: scale(1); }
   100% { background: var(--surface-2); box-shadow: 0 0 0 0 transparent; }
+}
+
+/* ------------------------------------------------------------ плавність і завантаження */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* скелетон: сірий блок з «відблиском», що пробігає зліва направо */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  to { transform: translateX(100%); }
+}
+
+.skeleton--line { height: 14px; }
+.skeleton--line + .skeleton--line { margin-top: var(--sp-2); }
+.skeleton--short { width: 60%; }
+.skeleton--block { height: 64px; }
+.skeleton--btn { height: 42px; }
+
+/* скелетон карти: силует, що «дихає» */
+.skeleton-map {
+  width: min(90%, 760px);
+  aspect-ratio: 1.5;
+  border-radius: 40% 55% 45% 50% / 45% 40% 55% 50%;
+  animation: breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  50% { opacity: 0.55; }
+}
+
+.loading-caption {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-4);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+/* спінер */
+.spinner {
+  width: 1.1em;
+  height: 1.1em;
+  flex: none;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* кнопка під час запиту: спінер замість іконки, без повторних кліків */
+.btn--loading {
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.btn--loading .icon {
+  display: none;
+}
+
+/* поява панелей каскадом: --i задає JS (0, 1, 2…) */
+.rise-in {
+  animation: rise-in 420ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* карта: плавна поява і плавна зміна кольорів */
+.map-svg {
+  animation: map-in 600ms var(--ease-out) both;
+}
+
+@keyframes map-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+.region {
+  transition: fill 350ms ease, stroke 200ms ease, stroke-width 200ms ease;
+}
+
+/* лінії reveal «малюються» від відповіді до правильної області (pathLength=1 ставить map.js) */
+.map-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 900ms var(--ease-out) forwards;
+  animation-delay: calc(var(--i, 0) * 120ms + 200ms);
+}
+
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+
+.map-dot {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop 350ms var(--ease-spring) both;
+  animation-delay: calc(var(--i, 0) * 120ms);
+}
+
+@keyframes pop {
+  from { transform: scale(0); }
+  to { transform: scale(1); }
+}
+
+/* хвиля від області після кліку */
+.map-pulse {
+  fill: none;
+  stroke-width: 3;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pulse-ring 900ms var(--ease-out) forwards;
+}
+
+@keyframes pulse-ring {
+  from { transform: scale(0.2); opacity: 0.9; }
+  to { transform: scale(3); opacity: 0; }
+}
+
+/* перехід між екранами хоста: QR ↔ карта */
+.stage-swap {
+  animation: rise-in 450ms var(--ease-out) both;
+}
+
+/* бали «підстрибують», коли змінюються */
+.bump {
+  animation: bump 450ms var(--ease-spring);
+}
+
+@keyframes bump {
+  40% { transform: scale(1.18); }
+}
+
+.lb-row__score,
+.attempt__points {
+  display: inline-block;
+}
+
+.btn {
+  transition: background var(--transition), border-color var(--transition), transform 120ms ease, box-shadow 200ms ease;
+}
+
+.btn--primary:hover {
+  box-shadow: 0 6px 16px rgba(0, 87, 184, 0.25);
 }
 
 @media (prefers-reduced-motion: reduce) {

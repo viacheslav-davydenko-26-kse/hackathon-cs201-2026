@@ -28,6 +28,7 @@ import { geoMercator, geoPath, geoArea } from 'https://cdn.jsdelivr.net/npm/d3-g
  * @property {(distribution: Object<string, number>) => void} choropleth       інтенсивність ∝ кількості
  * @property {(enabled: boolean) => void} setInteractive
  * @property {() => void} destroy
+ * @property {(regionId: string, color?: string) => void} pulse   хвиля від області (необов'язкова, для анімації)
  */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -214,10 +215,26 @@ export function createMap(el, geo, opts = {}) {
     if (!a || !b) return;
     const [x1, y1] = a.centroid;
     const [x2, y2] = b.centroid;
-    gLines.append(
-      svgEl('line', { x1, y1, x2, y2, stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round', opacity: 0.8 }),
-      svgEl('circle', { cx: x1, cy: y1, r: 5, fill: color }),
-    );
+    // --i — порядковий номер лінії: CSS малює їх по черзі, а не всі разом.
+    // pathLength=1 дозволяє анімувати «малювання» лінії будь-якої довжини через stroke-dashoffset.
+    const i = gLines.querySelectorAll('line').length;
+    const line = svgEl('line', {
+      x1, y1, x2, y2, stroke: color, 'stroke-width': 2.5, 'stroke-linecap': 'round', opacity: 0.85,
+      pathLength: 1, class: 'map-line', style: `--i: ${i}`,
+    });
+    const dot = svgEl('circle', { cx: x1, cy: y1, r: 6, fill: color, class: 'map-dot', style: `--i: ${i}` });
+    gLines.append(line, dot);
+  }
+
+  /** Хвиля, що розходиться від області (відгук на клік). Не входить у контракт, необов'язкова. */
+  function pulse(regionId, color = '#0057b8') {
+    const r = regions.get(regionId);
+    if (!r) return;
+    const [cx, cy] = r.centroid;
+    const ring = svgEl('circle', { cx, cy, r: 14, stroke: color, class: 'map-pulse' });
+    gLabels.append(ring);
+    ring.addEventListener('animationend', () => ring.remove());
+    setTimeout(() => ring.remove(), 1500); // запасний варіант, якщо анімації вимкнено
   }
 
   function choropleth(distribution) {
@@ -246,5 +263,5 @@ export function createMap(el, geo, opts = {}) {
     el.replaceChildren();
   }
 
-  return { colorRegion, colorMany, reset, select, drawLine, choropleth, setInteractive, destroy };
+  return { colorRegion, colorMany, reset, select, drawLine, choropleth, setInteractive, destroy, pulse };
 }

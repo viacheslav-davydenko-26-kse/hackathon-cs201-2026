@@ -22,8 +22,9 @@
 
     <main class="layout">
       <section class="map-area">
-        <div class="map-wrap" id="map">
-          <p class="muted">Карта завантажується…</p>
+        <div class="map-wrap" id="map" aria-busy="true">
+          <!-- скелетон, поки вантажиться карта; map.js замінить вміст -->
+          <div class="skeleton skeleton-map" aria-label="Карта завантажується"></div>
         </div>
         <!-- легенда «гаряче/холодно»: відстань від твоєї відповіді до правильної -->
         <ul class="legend" aria-label="Легенда відстаней">
@@ -55,7 +56,11 @@
             <span class="pill pill--accent" id="hints-count"></span>
           </div>
           <!-- solo.js заповнює список -->
-          <ol class="hints" id="hints"></ol>
+          <ol class="hints" id="hints">
+            <li class="skeleton skeleton--block"></li>
+            <li class="skeleton skeleton--block"></li>
+            <li><div class="skeleton skeleton--line"></div><div class="skeleton skeleton--line skeleton--short"></div></li>
+          </ol>
         </section>
 
         <button class="btn btn--block" id="more-hint" type="button">

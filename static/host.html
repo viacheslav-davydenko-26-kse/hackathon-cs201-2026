@@ -29,10 +29,26 @@
         </div>
         <!-- round / reveal / finished: карта -->
         <div class="map-wrap" id="map" hidden></div>
-        <p class="muted" id="stage-loading">Створюємо кімнату…</p>
+        <!-- поки створюється кімната: скелетон карти + спінер -->
+        <div class="qr-stage" id="stage-loading" aria-busy="true">
+          <div class="skeleton skeleton-map"></div>
+          <p class="loading-caption"><span class="spinner"></span>Створюємо кімнату…</p>
+        </div>
       </section>
 
-      <aside class="side" id="side"></aside>
+      <aside class="side" id="side">
+        <!-- скелетон бічної панелі; host.js замінить його першим же станом -->
+        <section class="panel">
+          <div class="skeleton skeleton--line skeleton--short"></div>
+          <div class="skeleton skeleton--line"></div>
+        </section>
+        <div class="skeleton skeleton--btn"></div>
+        <section class="panel">
+          <div class="skeleton skeleton--block"></div>
+          <div class="skeleton skeleton--line" style="margin-top: 12px"></div>
+          <div class="skeleton skeleton--line skeleton--short"></div>
+        </section>
+      </aside>
     </main>
   </div>
 

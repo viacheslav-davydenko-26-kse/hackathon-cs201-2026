@@ -103,6 +103,56 @@ export function createSoundToggle() {
   return btn;
 }
 
+// ---------------------------------------------------------------- числа і каскад
+const running = new WeakMap(); // елемент → id анімації, щоб нова анімація скасовувала стару
+
+/**
+ * Плавно «докручує» число в елементі від from до to (ease-out) і злегка підстрибує.
+ * @param {HTMLElement} el
+ * @param {number} to
+ * @param {{from?: number, ms?: number, prefix?: string}} [opts]   from за замовчуванням — поточне число в el
+ */
+export function animateNumber(el, to, { from, ms = 700, prefix = '' } = {}) {
+  const start = from ?? (Number(el.textContent.replace(/[^\d-]/g, '')) || 0);
+  cancelAnimationFrame(running.get(el));
+  if (start === to || reducedMotion()) {
+    el.textContent = prefix + to;
+    return;
+  }
+  el.classList.remove('bump');
+  void el.offsetWidth; // перезапуск CSS-анімації
+  el.classList.add('bump');
+
+  const t0 = performance.now();
+  const step = (t) => {
+    const p = Math.min(1, (t - t0) / ms);
+    const eased = 1 - (1 - p) ** 3;
+    el.textContent = prefix + Math.round(start + (to - start) * eased);
+    if (p < 1) running.set(el, requestAnimationFrame(step));
+  };
+  running.set(el, requestAnimationFrame(step));
+}
+
+/** Каскадна поява дочірніх елементів: кожному .rise-in з затримкою --i × 70 мс. */
+export function stagger(children) {
+  [...children].forEach((el, i) => {
+    el.classList.add('rise-in');
+    el.style.setProperty('--i', String(i));
+  });
+}
+
+/** Кнопка в стані «чекаємо сервер»: спінер, без повторних кліків. Повертає функцію «зняти». */
+export function buttonBusy(btn) {
+  const spinner = document.createElement('span');
+  spinner.className = 'spinner';
+  btn.classList.add('btn--loading');
+  btn.prepend(spinner);
+  return () => {
+    btn.classList.remove('btn--loading');
+    spinner.remove();
+  };
+}
+
 // ---------------------------------------------------------------- конфеті
 /**
  * Залп конфеті поверх сторінки. Canvas сам видаляється після анімації.
