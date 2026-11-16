@@ -11,17 +11,29 @@
   <div class="app">
     <header class="topbar">
       <div class="logo">ДеЦе?<span> Live</span></div>
-      <div class="stat">
-        <span class="stat__label">Раунд</span>
-        <span class="stat__value" id="round-no">—</span>
+      <div class="topbar__right">
+        <span class="room-code" id="room-code" hidden></span>
+        <div class="stat">
+          <span class="stat__label">Раунд</span>
+          <span class="stat__value" id="round-no">—</span>
+        </div>
       </div>
     </header>
 
-    <!-- host.js рендерить сюди екран за статусом кімнати: lobby | round | reveal | finished -->
-    <main class="layout" id="app">
-      <section class="map-area" id="map">
-        <p class="muted">Створюємо кімнату…</p>
+    <!-- host.js показує потрібні блоки за статусом кімнати: lobby | round | reveal | finished -->
+    <main class="layout">
+      <section class="map-area">
+        <!-- lobby: великий QR -->
+        <div class="qr-stage" id="qr-stage" hidden>
+          <h1 class="qr-stage__title">Скануйте і грайте разом!</h1>
+          <div class="qr" id="qr"></div>
+          <p class="join-url" id="join-url"></p>
+        </div>
+        <!-- round / reveal / finished: карта -->
+        <div class="map-host" id="map" hidden></div>
+        <p class="muted" id="stage-loading">Створюємо кімнату…</p>
       </section>
+
       <aside class="side" id="side"></aside>
     </main>
   </div>

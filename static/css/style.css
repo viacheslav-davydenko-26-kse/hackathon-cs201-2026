@@ -360,6 +360,147 @@ svg {
   font-weight: 800;
 }
 
+/* ------------------------------------------------------------ host (проєктор) */
+.topbar__right {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-5);
+}
+
+.room-code {
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--radius-sm);
+  background: var(--accent-2);
+}
+
+.map-host {
+  width: 100%;
+}
+
+.qr-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  text-align: center;
+}
+
+.qr-stage__title {
+  font-size: var(--fs-xxl);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.qr {
+  width: min(55vh, 100%);
+}
+
+.qr svg {
+  width: 100%;
+  height: auto;
+}
+
+.join-url {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  word-break: break-all;
+}
+
+/* гравці в лобі */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.chip {
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 600;
+  animation: hint-in 300ms ease;
+}
+
+/* таймер і прогрес */
+.timer {
+  font-size: var(--fs-xxl);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.timer--low {
+  color: var(--danger);
+}
+
+.progress {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+.progress__bar {
+  height: 100%;
+  background: var(--accent);
+  transition: width 300ms ease;
+}
+
+/* лідерборд */
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 2em 1fr auto auto;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.lb-row:first-child {
+  background: var(--accent-2);
+}
+
+.lb-row__place {
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.lb-row__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lb-row__score {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-row__delta {
+  font-size: var(--fs-sm);
+  color: var(--success);
+  font-variant-numeric: tabular-nums;
+  min-width: 4em;
+  text-align: right;
+}
+
+.final-title {
+  font-size: var(--fs-xxl);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
 .muted {
   color: var(--text-muted);
 }
@@ -403,6 +544,11 @@ svg {
 .map-label {
   font-size: 13px;
   fill: var(--text-muted);
+}
+
+.is-projector .map-label {
+  font-size: 16px;
+  font-weight: 600;
 }
 
 .map-tooltip {
