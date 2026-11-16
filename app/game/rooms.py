@@ -82,12 +82,21 @@ class RoomManager(ABC):
     start(code, host_key)            → RoomState. lobby → round 1. Інакше InvalidState. Чужий ключ → BadHostKey.
     next(code, host_key)             → RoomState. round → reveal (дострокове завершення);
                                        reveal → round n+1, або finished після останнього.
-    guess(code, player_id, region)   → RoomGuessResponse. Лише в round; друга відповідь → AlreadyGuessed.
-    state(code, player_id=None)      → RoomState. Невідомий player_id ігнорується (me=None).
+    guess(code, player_id, region)   → RoomGuessResponse. Приймається, лише якщо status == round і now < ends_at.
+                                       Порядок перевірок: RoomNotFound → PlayerNotFound → RegionNotFound →
+                                       RegionNotPlayable → (lobby/finished: InvalidState) →
+                                       (reveal або now >= ends_at: RoundFinished) → AlreadyGuessed.
+                                       Відхилена відповідь стан не змінює.
+    state(code, player_id=None)      → RoomState. Невідомий player_id → анонімний стан (me=None, my_guess=None), 200.
 
-    Автопереходи (ліниво, у будь-якому виклику): round → reveal, коли now >= ends_at або всі гравці відповіли.
-    Бали на reveal: scoring.points(correct, d_km, hint_index) + scoring.speed_bonus(ends_at - at, round_seconds)
-    (бонус швидкості лише за правильну відповідь). Хто не відповів — 0.
+    Автопереходи (ліниво, на початку будь-якого виклику): round → reveal, коли now >= ends_at
+    або всі гравці (усі, хто приєднався, — «відключених» не буває) відповіли.
+    hint_index відповіді фіксується в момент прийняття: open_hint_count(started_at, at, ...) - 1.
+    Бали на reveal: scoring.points(correct, d_km, hint_index) + (correct ? scoring.speed_bonus(ends_at - at,
+    round_seconds) : 0); d_km неокруглена. Хто не відповів — 0.
+    Порядок: leaderboard — score спадно, при рівності — порядок приєднання; reveal.guesses — порядок прийняття.
+    Регіони в межах кімнати не повторюються (поки є невикористані); DataUnavailable від picker → інший регіон.
+    card: якщо CardBuilder кинув будь-який виняток — reveal іде далі з card=None (виняток логується).
     """
 
     @abstractmethod

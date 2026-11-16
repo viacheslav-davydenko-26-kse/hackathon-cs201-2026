@@ -33,11 +33,15 @@ class SoloRoundState:
 class SoloService(ABC):
     """Контракт (див. також docs/contract.md → «Соло»):
 
-    start_round()      → SoloRound з 1 відкритою підказкою.
+    start_round()      → SoloRound з 1 відкритою підказкою. Регіон, для якого picker кинув
+                         DataUnavailable, пропускається; 503 — лише якщо не підходить жоден.
     reveal_hint(id)    → HintsResponse з УСІМА відкритими. Помилки: RoundNotFound, RoundFinished, NoMoreHints.
-    guess(id, region)  → SoloGuessResponse. Помилки: RoundNotFound, RoundFinished, RegionNotFound,
-                         RegionNotPlayable. Повторна відповідь тим самим регіоном — теж спроба.
-    Бали: app.game.scoring.points(correct, d_km, hint_index=opened-1, attempt=n).
+    guess(id, region)  → SoloGuessResponse. Помилки (спробу НЕ витрачають, стан не змінюють):
+                         RoundNotFound, RoundFinished, RegionNotFound, RegionNotPlayable,
+                         AlreadyGuessed (цей регіон уже називали в раунді).
+    Бали: app.game.scoring.points(correct, d_km, hint_index=opened-1, attempt=n), d_km — НЕокруглена.
+    total_points = сума points усіх спроб (неправильні з частковими балами теж).
+    Відповідь: distance_km округлено до 0.1 (лише для показу); heat — з неокругленої відстані.
     Раунд finished, коли correct або attempts == SOLO_MAX_ATTEMPTS; тоді answer_region_id заповнено.
     """
 
