@@ -49,14 +49,34 @@ class FactsCoverage(Check):
 
 
 class NanMatrix(Check):
-    """TODO(Ілля): регіон × метрика, де значення нема; вивести як таблицю."""
+    """Регіон × метрика, де значення нема; виводить зведення пропусків."""
     name = "NaN-матриця"
 
-    def run(self, repo):
-        raise NotImplementedError
+    def run(self, repo: Repository) -> CheckResult:
+        metrics = [m.id for m in repo.metrics()]
+        details: list[str] = []
+        for reg in repo.playable_regions():
+            present = {
+                rm.metric_id
+                for rm in repo.region_metrics(reg.id)
+                if rm.value is not None or rm.value_text
+            }
+            missing = [m for m in metrics if m not in present]
+            if missing:
+                details.append(f"{reg.id} ({len(missing)}/{len(metrics)}): {', '.join(missing)}")
+        return CheckResult(self.name, "warn" if details else "ok", details)
 
 
-CHECKS: list[Check] = [MetricsCoverage(), FactsCoverage(), NanMatrix()]
+class SourceUrls(Check):
+    """У кожної метрики заповнені source_name та source_url."""
+    name = "source_url у metrics"
+
+    def run(self, repo: Repository) -> CheckResult:
+        bad = [m.id for m in repo.metrics() if not m.source_name or not m.source_url]
+        return CheckResult(self.name, "error" if bad else "ok", bad)
+
+
+CHECKS: list[Check] = [MetricsCoverage(), FactsCoverage(), NanMatrix(), SourceUrls()]
 
 
 def main(repo: Repository | None = None) -> int:
