@@ -15,7 +15,7 @@ import { icon } from './icons.js?v=2';
  * @typedef {object} MapOptions
  * @property {(regionId: string) => void} [onClick]   лише для playable; Крим/Севастополь не клікаються
  * @property {boolean} [interactive=true]             false → без hover/кліків (проєктор у reveal)
- * @property {boolean} [labels=false]                 підписи: офіційні назви (regionLabel, форма 'map')
+ * @property {boolean|'zoom'} [labels=false]         підписи (офіційні назви); 'zoom' — лише на збільшеній карті
  * @property {number} [kyivRadius=10]                 клікабельне коло поверх Києва, px
  * @property {boolean} [zoomable=false]               зум: щипок / колесо / кнопки +−, перетягування
  */
@@ -155,7 +155,20 @@ export function createMap(el, geo, opts = {}) {
     kyivHit.addEventListener('pointerleave', () => kyivPath.classList.remove('region--hover'));
   }
 
-  if (labels) {
+  // labels: true — підписи завжди (проєктор); 'zoom' — лише на збільшеній карті (телефон, соло),
+  // щоб на повному вигляді не підказувати й не злипатися.
+  const zoomLabels = labels === 'zoom';
+  /** Підписи для режиму 'zoom': розмір перераховується при кожній зміні масштабу. */
+  const zoomLabelNodes = [];
+  if (zoomLabels) {
+    for (const [, r] of regions) {
+      const [x, y] = r.centroid;
+      const text = svgEl('text', { x, y, class: 'map-label map-label--zoom', 'text-anchor': 'middle', 'dominant-baseline': 'middle' });
+      text.textContent = regionLabel(r.props.name_uk, 'map');
+      gLabels.append(text);
+      zoomLabelNodes.push({ text, width: r.bounds[1][0] - r.bounds[0][0], len: text.textContent.length });
+    }
+  } else if (labels) {
     for (const [id, r] of regions) {
       if (id === KYIV_ID) continue;
       const [x, y] = r.centroid;
@@ -238,10 +251,35 @@ export function createMap(el, geo, opts = {}) {
     kyivHit?.setAttribute('r', kyivRadius / k);
     kyivRing?.setAttribute('r', (kyivRadius + 4) / k);
     svg.classList.toggle('map-svg--zoomed', k > 1.01);
+    updateZoomLabels();
     if (zoomUi) {
       zoomUi.out.disabled = k <= 1.01;
       zoomUi.reset.disabled = k <= 1.01;
       zoomUi.in.disabled = k >= MAX_ZOOM - 0.01;
+    }
+  }
+
+  const LABELS_FROM_ZOOM = 1.8;   // з якого масштабу показувати підписи в режимі 'zoom'
+  const LABEL_PX = 11;            // бажаний розмір підпису на екрані, px
+
+  /**
+   * Підписи в режимі 'zoom' тримають сталий розмір на ЕКРАНІ (≈11 px), хоч карта й збільшена в k разів:
+   * розмір у координатах карти = 11 / (масштаб SVG на сторінці × k). Довгу назву у вузькій
+   * області зменшуємо до 70%, щоб влізла.
+   */
+  function updateZoomLabels() {
+    if (!zoomLabels) return;
+    const visible = k >= LABELS_FROM_ZOOM;
+    gLabels.classList.toggle('map-labels--hidden', !visible);
+    if (!visible) return;
+    const screenScale = svg.getScreenCTM()?.a || 0;   // скільки px екрана в одній одиниці viewBox
+    if (!screenScale) return;                          // карта прихована — порахуємо при наступному зумі
+    const unit = 1 / (screenScale * k);                 // 1 px екрана в координатах карти
+    for (const l of zoomLabelNodes) {
+      const regionPx = l.width * screenScale * k;
+      const fit = Math.max(0.7, Math.min(1, (0.9 * regionPx) / (0.56 * LABEL_PX * l.len)));
+      l.text.style.fontSize = `${LABEL_PX * fit * unit}px`;
+      l.text.style.strokeWidth = `${3 * unit}px`;
     }
   }
 

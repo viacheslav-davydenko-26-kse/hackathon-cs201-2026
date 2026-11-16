@@ -324,7 +324,7 @@ async function init() {
   const [cfg, regions, geo] = await Promise.all([getConfig(), getRegions(), getGeo()]);
   config = cfg;
   regionsById = new Map(regions.map((r) => [r.id, r]));
-  map = createMap(ui.map, geo, { onClick: guess, zoomable: true });
+  map = createMap(ui.map, geo, { onClick: guess, zoomable: true, labels: 'zoom' });
   ui.map.removeAttribute('aria-busy');
 
   ui.moreHint.addEventListener('click', openHint);

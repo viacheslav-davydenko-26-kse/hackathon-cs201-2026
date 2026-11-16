@@ -1372,6 +1372,20 @@ svg {
 .map-svg--zoomed { touch-action: none; cursor: grab; }
 .map-svg--zoomed:active { cursor: grabbing; }
 
+/* підписи на збільшеній карті (режим labels: 'zoom'): розмір задає map.js */
+.map-label--zoom {
+  fill: #4a5363;
+  font-weight: 600;
+}
+
+.map-svg g.map-labels--hidden .map-label--zoom {
+  opacity: 0;
+}
+
+.map-label--zoom {
+  transition: opacity 200ms ease;
+}
+
 .map-zoom {
   position: absolute;
   top: var(--sp-2);
