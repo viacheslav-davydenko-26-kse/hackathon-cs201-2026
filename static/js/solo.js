@@ -300,6 +300,12 @@ function handleRoundError(e) {
     case 'no_more_hints':
       ui.moreHint.hidden = true;
       break;
+    case 'already_guessed':          // §9 S2: спроба не витрачається
+      showError('Цю область ти вже називав у цьому раунді — обери іншу.');
+      break;
+    case 'region_not_playable':      // карта не дає клікнути, але про всяк випадок
+      showError('Ця область не бере участі в грі.');
+      break;
     default:
       showError('Щось пішло не так. Спробуй ще раз.');
       console.error(e);

@@ -1,6 +1,6 @@
 // HTTP-клієнт. Єдине місце, де фронт ходить у бекенд. Власник: Андрій (сигнатури = контракт).
 //
-// Моки: USE_MOCK = true або ?mock=1 в URL → відповіді з static/mock/*.json.
+// Моки: ?mock=1 в URL (або USE_MOCK = true) → відповіді з static/mock/*.json.
 //   ?mock=0 — примусово справжній API.  ?state=round|reveal|finished|lobby — який RoomState віддавати.
 //   ?guess=correct|wrong|failed — яку відповідь на solo guess віддавати.
 // Помилки: кожна функція кидає ApiError {status, code, message}.
@@ -14,7 +14,7 @@
 /** @typedef {import('./types.js').RoomCreated} RoomCreated */
 /** @typedef {import('./types.js').RoomState} RoomState */
 
-export const USE_MOCK = true;
+export const USE_MOCK = false;   // MVP: справжній API; моки — через ?mock=1
 
 const params = new URLSearchParams(location.search);
 const mockOn = params.has('mock') ? params.get('mock') !== '0' : USE_MOCK;

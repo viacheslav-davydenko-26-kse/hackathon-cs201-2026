@@ -265,6 +265,7 @@ svg {
 
 .pill {
   display: inline-flex;
+  white-space: nowrap;
   align-items: center;
   gap: var(--sp-1);
   padding: 2px var(--sp-2);
