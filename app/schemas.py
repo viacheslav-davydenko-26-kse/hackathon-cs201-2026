@@ -78,7 +78,7 @@ class SoloGuessResponse(Model):
     attempt: int = Field(ge=1, description="Номер цієї спроби, 1-based")
     attempts_left: int = Field(ge=0)
     finished: bool = Field(description="true → раунд закрито (вгадано або спроби вичерпано)")
-    distance_km: float = Field(ge=0, description="Між центроїдами; 0 якщо correct")
+    distance_km: float = Field(ge=0, description="Між центроїдами, округлено до 0.1 (бали/heat — з неокругленої); 0 якщо correct")
     heat: Heat
     points: int = Field(ge=0, description="Бали за ЦЮ спробу")
     total_points: int = Field(ge=0, description="Сума за раунд")

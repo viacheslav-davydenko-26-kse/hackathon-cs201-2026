@@ -49,14 +49,59 @@ class FactsCoverage(Check):
 
 
 class NanMatrix(Check):
-    """TODO(Ілля): регіон × метрика, де значення нема; вивести як таблицю."""
+    """Регіон × метрика, де значення нема; виводить зведення пропусків."""
     name = "NaN-матриця"
 
+    def run(self, repo: Repository) -> CheckResult:
+        metrics = [m.id for m in repo.metrics()]
+        details: list[str] = []
+        for reg in repo.playable_regions():
+            present = {
+                rm.metric_id
+                for rm in repo.region_metrics(reg.id)
+                if rm.value is not None or rm.value_text
+            }
+            missing = [m for m in metrics if m not in present]
+            if missing:
+                details.append(f"{reg.id} ({len(missing)}/{len(metrics)}): {', '.join(missing)}")
+        return CheckResult(self.name, "warn" if details else "ok", details)
+
+
+class SourceUrls(Check):
+    """У кожної метрики заповнені source_name та source_url."""
+    name = "source_url у metrics"
+
+    def run(self, repo: Repository) -> CheckResult:
+        bad = [m.id for m in repo.metrics() if not m.source_name or not m.source_url]
+        return CheckResult(self.name, "error" if bad else "ok", bad)
+
+
+class AlertsCoverage(Check):
+    """docs/contract.md §9 A1–A6: спільне вікно тривог і підозрілі «тихі» паузи всередині нього."""
+    name = "покриття тривог (спільне вікно)"
+
     def run(self, repo):
-        raise NotImplementedError
+        import csv
+
+        from app.config import PARSED_DIR
+        from etl.load_alerts import MAX_QUIET_DAYS
+        path = PARSED_DIR / "coverage.csv"
+        if not path.exists():
+            return CheckResult(self.name, "warn", [f"{path} not found"])
+        rows = [r for r in csv.DictReader(path.open(encoding="utf-8")) if r.get("alerts_window_start")]
+        windows = {(r["alerts_window_start"], r["alerts_window_end"]) for r in rows}
+        if len(windows) != 1:
+            return CheckResult(self.name, "error", [f"регіони мають різні вікна: {sorted(windows)}"])
+        (start, end), = windows
+        details = [f"вікно {start}..{end}; без даних: "
+                   + (", ".join(r.id for r in repo.playable_regions()
+                                if not repo.region_metrics(r.id, "alerts_count")) or "—")]
+        quiet = [f"{r['region_id']}: {r['alerts_max_quiet_days']} дн. без тривог з {r['alerts_max_quiet_from']}"
+                 for r in rows if int(r["alerts_max_quiet_days"] or 0) > MAX_QUIET_DAYS]
+        return CheckResult(self.name, "warn" if quiet else "ok", details + quiet)
 
 
-CHECKS: list[Check] = [MetricsCoverage(), FactsCoverage(), NanMatrix()]
+CHECKS: list[Check] = [MetricsCoverage(), FactsCoverage(), NanMatrix(), SourceUrls(), AlertsCoverage()]
 
 
 def main(repo: Repository | None = None) -> int:
