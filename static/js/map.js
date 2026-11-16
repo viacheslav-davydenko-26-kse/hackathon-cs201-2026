@@ -15,7 +15,7 @@ import { icon } from './icons.js?v=2';
  * @typedef {object} MapOptions
  * @property {(regionId: string) => void} [onClick]   лише для playable; Крим/Севастополь не клікаються
  * @property {boolean} [interactive=true]             false → без hover/кліків (проєктор у reveal)
- * @property {boolean} [labels=false]                 підписи short_uk
+ * @property {boolean} [labels=false]                 підписи: офіційні назви (regionLabel, форма 'map')
  * @property {number} [kyivRadius=10]                 клікабельне коло поверх Києва, px
  * @property {boolean} [zoomable=false]               зум: щипок / колесо / кнопки +−, перетягування
  */
@@ -41,6 +41,20 @@ const DISABLED_TEXT = 'тимчасово окупована, дані відс�
 // Шкала для choropleth: від світлого до насиченого червоного.
 const CHORO_FROM = [253, 224, 204];
 const CHORO_TO = [215, 48, 31];
+
+/**
+ * Офіційна назва регіону з name_uk у потрібній формі (замість розмовних «Прикарпаття», «Буковина»).
+ *   'map'  — для підпису на карті: «Івано-Франківська», «Київ», «АР Крим»
+ *   'list' — для списків і кнопок: «Івано-Франківська обл.», «м. Київ», «АР Крим»
+ * @param {string} nameUk   Region.name_uk, напр. 'Івано-Франківська область'
+ * @param {'map'|'list'} [form='list']
+ */
+export function regionLabel(nameUk, form = 'list') {
+  if (!nameUk) return '';
+  if (nameUk.startsWith('Автономна Республіка')) return 'АР Крим';
+  if (nameUk.startsWith('м. ')) return form === 'map' ? nameUk.slice(3) : nameUk;
+  return nameUk.replace(/\s+область$/, form === 'map' ? '' : ' обл.');
+}
 
 /** Створює SVG-елемент з атрибутами. */
 function svgEl(tag, attrs = {}) {
@@ -117,7 +131,9 @@ export function createMap(el, geo, opts = {}) {
     const node = svgEl('path', { d: path(f), class: 'region', 'data-id': id });
     if (!playable) node.classList.add('region--disabled');
     gRegions.append(node);
-    regions.set(id, { props: f.properties, playable, centroid: path.centroid(f), nodes: [node] });
+    regions.set(id, {
+      props: f.properties, playable, centroid: path.centroid(f), bounds: path.bounds(f), nodes: [node],
+    });
   }
 
   // Київ на карті крихітний, тому поверх нього ставимо НЕВИДИМЕ коло — зону кліку, в яку легко влучити.
@@ -143,8 +159,15 @@ export function createMap(el, geo, opts = {}) {
     for (const [id, r] of regions) {
       if (id === KYIV_ID) continue;
       const [x, y] = r.centroid;
-      const text = svgEl('text', { x, y, class: 'map-label', 'text-anchor': 'middle', 'dominant-baseline': 'middle' });
-      text.textContent = r.props.short_uk;
+      const label = regionLabel(r.props.name_uk, 'map');
+      // Довга назва у вузькій області («Івано-Франківська») — зменшуємо шрифт, щоб влізла.
+      // Ширина символу ≈ 0.56 від розміру шрифту; рахуємо від найбільшого розміру (15 px на проєкторі).
+      const regionWidth = r.bounds[1][0] - r.bounds[0][0];
+      const fit = Math.max(0.7, Math.min(1, (0.9 * regionWidth) / (0.56 * 15 * label.length)));
+      const text = svgEl('text', {
+        x, y, class: 'map-label', 'text-anchor': 'middle', 'dominant-baseline': 'middle', style: `--fit: ${fit.toFixed(2)}`,
+      });
+      text.textContent = label;
       gLabels.append(text);
     }
   }
@@ -162,7 +185,8 @@ export function createMap(el, geo, opts = {}) {
       tooltip.hidden = true;
       return;
     }
-    tooltip.textContent = r.playable ? r.props.short_uk : `${r.props.short_uk}: ${DISABLED_TEXT}`;
+    const name = regionLabel(r.props.name_uk, 'list');
+    tooltip.textContent = r.playable ? name : `${name}: ${DISABLED_TEXT}`;
     const box = el.getBoundingClientRect();
     tooltip.style.left = `${e.clientX - box.left + 12}px`;
     tooltip.style.top = `${e.clientY - box.top + 12}px`;

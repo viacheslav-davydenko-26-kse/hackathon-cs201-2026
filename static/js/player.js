@@ -11,7 +11,7 @@
 // Після перезавантаження сторінки гравець продовжує без повторного join (player_id з localStorage).
 
 import { getRegions, getGeo, roomJoin, roomGuess, pollRoom, ApiError, HEAT_COLORS } from './api.js?v=2';
-import { createMap } from './map.js?v=2';
+import { createMap, regionLabel } from './map.js?v=2';
 import { icon, hydrateIcons, difficultyMeter } from './icons.js?v=2';
 import { confetti, playSound, animateNumber, buttonBusy } from './fx.js?v=2';
 
@@ -76,7 +76,7 @@ function h(tag, attrs = {}, ...children) {
 
 const nowServer = () => Date.now() / 1000 + clockOffset;
 const secondsLeft = (at) => (at == null ? null : Math.max(0, Math.ceil(at - nowServer())));
-const regionName = (id) => regionsById.get(id)?.short_uk ?? id;
+const regionName = (id) => regionLabel(regionsById.get(id)?.name_uk) || id;
 
 function pointsWord(n) {
   const d10 = n % 10;

@@ -8,7 +8,7 @@
 import {
   getConfig, getRegions, getGeo, getCard, soloStart, soloHint, soloGuess, ApiError, HEAT_COLORS,
 } from './api.js?v=2';
-import { createMap } from './map.js?v=2';
+import { createMap, regionLabel } from './map.js?v=2';
 import { renderCard } from './card.js?v=2';
 import { icon, hydrateIcons, difficultyMeter } from './icons.js?v=2';
 import {
@@ -81,7 +81,7 @@ function newRoundState(r) {
   };
 }
 
-const regionName = (id) => regionsById.get(id)?.short_uk ?? id;
+const regionName = (id) => regionLabel(regionsById.get(id)?.name_uk) || id;
 
 /** 1 бал, 2 бали, 5 балів, 11 балів, 21 бал. */
 function pointsWord(n) {
