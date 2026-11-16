@@ -1,14 +1,135 @@
 <!doctype html>
-<!-- Власник: Вадім. -->
+<!-- Екран гравця (телефон). Власник: Андрій (раніше Вадім). -->
 <html lang="uk">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0057b8">
   <title>ДеЦе? Live — Гравець</title>
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=2">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%230057b8'/%3E%3Cpath d='M12 5a5 5 0 0 0-5 5c0 3.5 5 9 5 9s5-5.5 5-9a5 5 0 0 0-5-5zm0 7a2 2 0 1 1 0-4 2 2 0 0 1 0 4z' fill='%23ffd34d'/%3E%3C/svg%3E">
 </head>
-<body>
-  <main id="app"></main>
-  <script type="module" src="/static/js/player.js"></script>
+<body class="is-player">
+  <div class="app">
+    <header class="topbar">
+      <div class="logo"><span class="logo__mark"><i data-icon="map-pin"></i></span>ДеЦе?<span class="logo__accent">Live</span></div>
+      <div class="topbar__right">
+        <span class="pill" id="room-pill" hidden></span>
+        <span class="score" id="score-pill" hidden><i data-icon="trophy"></i><span id="score">0</span></span>
+      </div>
+    </header>
+
+    <main class="player">
+      <!-- завантаження -->
+      <section class="panel player-center" id="screen-loading">
+        <span class="spinner spinner--lg"></span>
+        <p class="muted">Підключаємось…</p>
+      </section>
+
+      <!-- приєднання: код кімнати (якщо його нема в посиланні) + ім'я -->
+      <form class="panel player-form" id="screen-join" hidden novalidate>
+        <h1 class="player-title">Приєднатися до гри</h1>
+        <p class="muted" id="join-room" hidden></p>
+        <label class="field" id="code-field">
+          <span class="field__label">Код кімнати</span>
+          <input class="input input--code" id="code-input" name="code" autocomplete="off" autocapitalize="characters"
+                 maxlength="4" placeholder="K7QF" inputmode="text">
+        </label>
+        <label class="field">
+          <span class="field__label">Твоє ім'я</span>
+          <input class="input" id="name-input" name="name" autocomplete="nickname" maxlength="20" placeholder="Напр., Оля" required>
+        </label>
+        <p class="error" id="join-error" hidden></p>
+        <button class="btn btn--primary btn--block btn--lg" id="join-btn" type="submit">
+          <i data-icon="play"></i>Грати
+        </button>
+      </form>
+
+      <!-- лобі -->
+      <section class="panel player-center" id="screen-lobby" hidden>
+        <span class="result__icon result__icon--ok"><i data-icon="circle-check" class="icon--lg"></i></span>
+        <h1 class="player-title">Ти в грі, <span id="lobby-name"></span>!</h1>
+        <p class="muted">Чекаємо, поки ведучий почне. Дивись на великий екран 👀</p>
+        <ul class="chips chips--center" id="lobby-players"></ul>
+      </section>
+
+      <!-- після відповіді: зверху, щоб було видно одразу -->
+      <section class="panel player-waiting" id="screen-waiting" hidden>
+        <span class="spinner"></span>
+        <div>
+          <p><b>Відповідь прийнято:</b> <span id="waiting-guess"></span></p>
+          <p class="muted">Чекаємо інших · <span id="waiting-answered"></span></p>
+        </div>
+      </section>
+
+      <!-- раунд: таймер → найсвіжіша підказка → карта → попередні підказки -->
+      <section id="screen-round" hidden>
+        <div class="panel player-timer">
+          <div class="timer-row">
+            <span class="panel__title"><i data-icon="timer"></i>Раунд <span id="round-no"></span></span>
+            <span class="timer timer--sm" id="timer">—</span>
+          </div>
+          <div class="progress"><div class="progress__bar" id="timer-bar"></div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel__head">
+            <h2 class="panel__title"><i data-icon="lightbulb"></i>Підказка</h2>
+            <span class="pill pill--accent" id="hints-count"></span>
+          </div>
+          <ol class="hints" id="hint-latest"></ol>
+          <p class="muted player-next-hint" id="next-hint"></p>
+        </div>
+
+        <div id="map-slot-round"></div>
+
+        <div class="panel" id="hints-prev-panel" hidden>
+          <h2 class="panel__title"><i data-icon="lock"></i>Попередні підказки</h2>
+          <ol class="hints hints--prev" id="hints-prev"></ol>
+        </div>
+      </section>
+
+      <!-- карта: одна на сторінку; player.js переносить її в потрібний слот -->
+      <section class="panel player-map" id="map-panel" hidden>
+        <div class="map-wrap" id="map"></div>
+      </section>
+
+      <!-- розкриття -->
+      <section class="panel result" id="screen-reveal" hidden>
+        <div class="result__head">
+          <span class="result__icon" id="reveal-icon"></span>
+          <div>
+            <h2 class="result__title" id="reveal-title"></h2>
+            <p class="result__sub" id="reveal-sub"></p>
+          </div>
+        </div>
+        <div class="player-stats">
+          <div><span class="big-num" id="reveal-points">0</span><span class="muted">балів за раунд</span></div>
+          <div><span class="big-num" id="reveal-place">—</span><span class="muted">місце</span></div>
+        </div>
+        <p class="muted player-center-text">Наступний раунд почне ведучий</p>
+      </section>
+      <div id="map-slot-reveal"></div>
+
+      <!-- фінал -->
+      <section class="panel player-center" id="screen-finished" hidden>
+        <span class="result__icon result__icon--gold"><i data-icon="trophy" class="icon--lg"></i></span>
+        <h1 class="player-title" id="final-title"></h1>
+        <p class="final-place"><span id="final-place">—</span></p>
+        <p class="muted" id="final-score"></p>
+      </section>
+
+      <p class="error" id="error" hidden></p>
+    </main>
+
+    <!-- кнопка відповіді, прилипає до низу екрана -->
+    <div class="action-bar" id="action-bar" hidden>
+      <button class="btn btn--primary btn--block btn--lg" id="guess-btn" type="button" disabled>
+        <i data-icon="map-pin"></i><span id="guess-label">Обери область на карті</span>
+      </button>
+    </div>
+  </div>
+
+  <script type="module" src="/static/js/player.js?v=2"></script>
 </body>
 </html>
