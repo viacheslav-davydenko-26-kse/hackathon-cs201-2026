@@ -21,16 +21,16 @@ from app.repository import CsvRepository
 OUT = Path(__file__).resolve().parent.parent / "static" / "mock"
 T0 = 1_763_300_000.0  # фіксований «зараз», щоб моки не змінювались між запусками
 
-HINTS = [
-    Hint(index=0, text="Тут найпопулярніший предмет НМТ на вибір, крім англійської, — історія України",
+HINTS = [  # формат як у справжніх (etl/build_facts.py): «{назва}: {що саме}», без повторів категорії підряд
+    Hint(index=0, text="Топ-предмет НМТ на вибір, крім англійської: історія України",
          metric_id="nmt_top_elective_non_eng", category="education"),
-    Hint(index=1, text="Тривоги тут тривали в середньому 65 хвилин — одне з найнижчих значень",
+    Hint(index=1, text="Середня тривога: на 20–35% нижче середнього",
          metric_id="alerts_avg_minutes", category="war"),
-    Hint(index=2, text="Народжуваність тут на 20% вища за середню по Україні",
+    Hint(index=2, text="Народжуваність: на 5–20% вище середнього",
          metric_id="births_per_1000", category="demography"),
-    Hint(index=3, text="Тут 3-є місце з 25 за кількістю учасників НМТ",
+    Hint(index=3, text="Учасників НМТ: у трійці найвищих",
          metric_id="nmt_participants", category="education"),
-    Hint(index=4, text="Обласний центр — найбільше місто заходу України",
+    Hint(index=4, text="Населення: 2\u00a0478\u00a0133 осіб",
          metric_id="population", category="demography"),
 ]
 

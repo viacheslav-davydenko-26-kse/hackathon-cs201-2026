@@ -1,43 +1,79 @@
-"""Каталог метрик + шаблони тексту фактів. Власник: Матвій.
+"""Каталог метрик для тексту підказок. Власник: Матвій.
 
-Базові поля (title, unit, category, source, higher_is) вже є в data/parsed/metrics.csv —
-тут лише те, чого там нема: шаблони речень для build_facts.
+Базові поля (title, unit, category, source, higher_is) лежать у data/parsed/metrics.csv і йдуть у картку.
+Тут лише те, що потрібно підказкам: коротка назва (`label`) і коротка одиниця (`unit`), щоб
+підказка вміщалась в один рядок на телефоні. Метрика без запису бере title_uk/unit із metrics.csv.
 
-Плейсхолдери шаблонів (str.format):
-  {title}  назва метрики з малої      {unit}  одиниця         {value}  значення (форматоване)
-  {rank}   місце                       {n}     з-поміж скількох {pct}   відхилення від середнього, % (без знака)
-  {dir}    'вище' | 'нижче'            {text}  value_text (categorical)
-Шаблони НЕ містять назви регіону: це підказка «Тут …».
+Підказка НЕ містить назви регіону: це опис «тут …».
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-
-from app.domain import FactKind
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
 class MetricSpec:
     metric_id: str
-    templates: dict[FactKind, str] = field(default_factory=dict)
+    label: str | None = None          # коротка назва для підказки; None → title_uk
+    unit: str | None = None           # коротка одиниця для raw; None → unit з metrics.csv, "" → без одиниці
     enabled: bool = True              # False → метрика не стає підказкою (але є в картці)
-    value_format: str = "{:g}"
+    period_from_unit: bool = False    # raw-підказка додає період з unit («… за період 1 січня – 20 серпня 2025»)
 
 
-DEFAULT_TEMPLATES: dict[FactKind, str] = {
-    "rank": "Тут {rank}-е місце з {n} за показником «{title}»",
-    "relative": "Показник «{title}» тут на {pct}% {dir} за середній по Україні",
-    "raw": "{title}: {value} {unit}",
-    "categorical": "{title}: {text}",
-}
+_SPECS = [
+    # war — ранги/відхилення рахуються в спільному вікні; raw-підказка називає це вікно
+    MetricSpec("alerts_count", "Повітряних тривог", "", period_from_unit=True),
+    MetricSpec("alerts_hours", "Годин під тривогою", "", period_from_unit=True),
+    MetricSpec("alerts_longest_hours", "Найдовша тривога", "год"),
+    MetricSpec("alerts_night_share", "Нічні тривоги (00–06)", "%"),
+    MetricSpec("alerts_avg_minutes", "Середня тривога", "хв"),
+    # demography
+    MetricSpec("population", "Населення", "осіб"),
+    MetricSpec("age_avg", "Середній вік", "років"),
+    MetricSpec("births", "Народжень за рік", ""),
+    MetricSpec("births_per_1000", "Народжуваність", "на 1000 осіб"),
+    MetricSpec("mother_age_avg", "Вік матері при пологах", "років"),
+    MetricSpec("deaths", "Смертей за рік", ""),
+    MetricSpec("deaths_per_1000", "Смертність", "на 1000 осіб"),
+    MetricSpec("deaths_per_birth", "Смертей на одне народження", ""),
+    MetricSpec("marriages", "Шлюбів за рік", ""),
+    MetricSpec("divorces", "Розлучень за рік", ""),
+    MetricSpec("marriages_per_1000", "Шлюбність", "на 1000 осіб"),
+    MetricSpec("divorces_per_1000", "Розлучуваність", "на 1000 осіб"),
+    MetricSpec("divorces_per_100_marriages", "Розлучень на 100 шлюбів", ""),
+    # education
+    MetricSpec("nmt_participants", "Учасників НМТ", ""),
+    MetricSpec("nmt_participants_per_1000", "Учасників НМТ на 1000 жителів", ""),
+    MetricSpec("nmt_avg_ukr", "Середній бал НМТ з української", ""),
+    MetricSpec("nmt_avg_math", "Середній бал НМТ з математики", ""),
+    MetricSpec("nmt_avg_hist", "Середній бал НМТ з історії", ""),
+    MetricSpec("nmt_180_ukr", "Частка 180+ з української", "%"),
+    MetricSpec("nmt_180_math", "Частка 180+ з математики", "%"),
+    MetricSpec("nmt_180_hist", "Частка 180+ з історії", "%"),
+    MetricSpec("nmt_any_180_share", "Частка 180+ хоч з одного предмета", "%"),
+    MetricSpec("nmt_eng_share", "Обрали англійську на НМТ", "%"),
+    MetricSpec("nmt_top_elective", "Топ-предмет НМТ на вибір", None),
+    MetricSpec("nmt_top_elective_non_eng", "Топ-предмет НМТ на вибір, крім англійської", None),
+]
 
-#: metric_id → MetricSpec. Заповнює Матвій; метрики без запису використовують DEFAULT_TEMPLATES.
-CATALOG: dict[str, MetricSpec] = {}
+#: metric_id → MetricSpec.
+CATALOG: dict[str, MetricSpec] = {s.metric_id: s for s in _SPECS}
 
 
 def spec(metric_id: str) -> MetricSpec:
     return CATALOG.get(metric_id) or MetricSpec(metric_id)
 
 
-def template(metric_id: str, kind: FactKind) -> str:
-    return spec(metric_id).templates.get(kind) or DEFAULT_TEMPLATES[kind]
+def label(metric_id: str, title_uk: str) -> str:
+    return spec(metric_id).label or title_uk
+
+
+def hint_unit(metric_id: str, unit: str | None) -> str:
+    short = spec(metric_id).unit
+    return (unit or "") if short is None else short
+
+
+def period(unit: str | None) -> str:
+    """«тривог за період 1 січня – 20 серпня 2025» → «1 січня – 20 серпня 2025»; без періоду → ""."""
+    _, sep, rest = (unit or "").partition("за період ")
+    return rest.strip() if sep else ""
