@@ -148,5 +148,20 @@ class DratsStep(Step):
             RegionMetric(region_id=rid, metric_id=mid, value=val, year=DRATS_YEAR)
             for (rid, mid), val in sorted(values.items())
         ]
-        series.sort(key=lambda p: (p.region_id, p.metric_id, p.period))
-        return EtlTables(metrics=list(DRATS_METRICS), region_metrics=region_metrics, series=series)
+        return EtlTables(metrics=list(DRATS_METRICS), region_metrics=region_metrics,
+                         series=_monthly_from_cumulative(series))
+
+
+def _monthly_from_cumulative(points: list[SeriesPoint]) -> list[SeriesPoint]:
+    """Держстат дає помісячні значення наростаючим підсумком з початку року (грудень == річне).
+    Переводимо в значення за кожен місяць: v[m] - v[m-1]."""
+    by_key: dict[tuple[str, str], list[SeriesPoint]] = defaultdict(list)
+    for p in points:
+        by_key[(p.region_id, p.metric_id)].append(p)
+    out: list[SeriesPoint] = []
+    for (rid, mid), pts in sorted(by_key.items()):
+        prev = 0.0
+        for p in sorted(pts, key=lambda x: x.period):
+            out.append(SeriesPoint(rid, mid, p.period, p.value - prev))
+            prev = p.value
+    return out

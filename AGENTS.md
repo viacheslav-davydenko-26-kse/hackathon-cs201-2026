@@ -29,10 +29,12 @@
 ```bash
 uv venv && uv pip install -r requirements.txt     # або python -m venv .venv && pip install -r requirements.txt
 python -m etl.run_all                             # db/game.sqlite + static/ua.geojson з data/parsed
+python -m etl.run_all --source raw                # те саме з сирих файлів у data/ (~20 с)
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 DEMO_ROUND_SECONDS=30 uvicorn app.main:app --host 0.0.0.0 --port 8000   # демо: 1 раунд по 30 с
 cloudflared tunnel --url http://localhost:8000                          # телефони поза LAN
 pytest                                            # має бути зелено (xfail = ще не реалізовано)
+pytest -m slow                                    # + повільний тест сирого НМТ
 ```
 
 Фронт без бекенда: відкрий `/static/index.html?mock=1`. Режими моків описані в `docs/contract.md` §10.

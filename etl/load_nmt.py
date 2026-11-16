@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import csv
+import shutil
 import subprocess
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -22,7 +23,7 @@ NMT_YEAR = 2025
 
 NMT_METRICS: list[MetricInfo] = [
     MetricInfo("nmt_participants", "Кількість учасників НМТ", "осіб", "numeric", "education", NMT_SOURCE, NMT_URL, NMT_YEAR, "neutral"),
-    MetricInfo("nmt_participants_per_1000", "Учасників НМТ на 1000 мешканців", "на 1000 мешканців", "numeric", "education", NMT_SOURCE, NMT_URL, NMT_YEAR, "neutral"),
+    MetricInfo("nmt_participants_per_1000", "Учасників НМТ", "на 1000 мешканців (населення на 01.01.2022)", "numeric", "education", NMT_SOURCE, NMT_URL, NMT_YEAR, "neutral"),
     MetricInfo("nmt_avg_ukr", "Середній бал НМТ: українська мова", "балів (100–200)", "numeric", "education", NMT_SOURCE, NMT_URL, NMT_YEAR, "better"),
     MetricInfo("nmt_180_ukr", "Частка 180+ балів: українська мова", "% зарахованих", "numeric", "education", NMT_SOURCE, NMT_URL, NMT_YEAR, "better"),
     MetricInfo("nmt_avg_math", "Середній бал НМТ: математика", "балів (100–200)", "numeric", "education", NMT_SOURCE, NMT_URL, NMT_YEAR, "better"),
@@ -56,10 +57,16 @@ def _ensure_nmt_csv(data_dir: Path) -> Path:
         return extracted
     archive = data_dir / "nmt" / "OpenDataNMT2025.7z"
     extracted.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        ["bsdtar", "-xf", str(archive), "-C", str(extracted.parent), "Odata2025File.csv"],
-        check=True,
-    )
+    # bsdtar / 7z, якщо є в системі; інакше — py7zr (чистий Python, є в requirements.txt)
+    for cmd in (["bsdtar", "-xf", str(archive), "-C", str(extracted.parent), extracted.name],
+                ["7z", "e", "-y", f"-o{extracted.parent}", str(archive), extracted.name]):
+        if shutil.which(cmd[0]):
+            subprocess.run(cmd, check=True, capture_output=True)
+            return extracted
+    import py7zr
+
+    with py7zr.SevenZipFile(archive) as z:
+        z.extract(path=extracted.parent, targets=[extracted.name])
     return extracted
 
 
@@ -127,7 +134,7 @@ class NmtStep(Step):
 
             reg = ctx.regions.get(rid)
             if reg and reg.population:
-                per_1000 = round((cnt / reg.population) * 1000.0, 2)
+                per_1000 = round((cnt / reg.population) * 1000.0, 3)
                 region_metrics.append(RegionMetric(rid, "nmt_participants_per_1000", per_1000, year=NMT_YEAR))
 
             for subj in ("ukr", "math", "hist"):

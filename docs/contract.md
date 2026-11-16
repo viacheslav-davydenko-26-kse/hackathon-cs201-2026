@@ -203,10 +203,10 @@ soloStart() ──► SoloRound{hints:[h0]} ──► [soloHint() ≤ 4 рази
 | `CardBuilder.build(region_id) → Card` | `app/game/card.py` | `DefaultCardBuilder` | Матвій |
 | `SoloService` | `app/game/solo.py` | `InMemorySoloService` | Слава (готово) |
 | `RoomManager` | `app/game/rooms.py` | `InMemoryRoomManager` | Слава (готово) |
-| `Step.run(ctx) → EtlTables` | `etl/base.py` | `AlertsStep`, `DratsStep`, `CarsStep`, `NmtStep` (`ParsedCsvStep` тимчасовий) | Ілля |
+| `Step.run(ctx) → EtlTables` | `etl/base.py` | `PopulationStep`, `AlertsStep`, `DratsStep`, `NmtStep` (готово; збігаються з `data/parsed`), `CarsStep` (даних МВС нема) | Ілля / Вадім (population) |
 | `FactGenerator.generate(...) → Fact[]` | `etl/build_facts.py` | `DefaultFactGenerator` | Матвій |
 | `Check.run(repo) → CheckResult` | `etl/check.py` | `NanMatrix` тощо | Ілля |
-| `build_geo`, `load_population` | `etl/*.py` | функції | Вадім |
+| `build_geo`, `load_population` | `etl/*.py` | функції (`load_population` готово) | Вадім |
 
 Детальні контракти записані в docstring кожного абстрактного класу. Яка реалізація підключена, вирішує `app/deps.py`
 (`HINT_PICKER=facts` вмикає `FactHintPicker`).
